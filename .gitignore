@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# 환경변수 / 비밀
+.env
+.env.local
+*.key
+*.pem
+
+# Claude Code 로컬 설정
+.claude/settings.local.json
+
+# 캐시 (재현 가능)
+cache/
+
+# 데이터 - 원본 (교육청 송부자료, 비공개)
+data/raw/*.xlsx
+data/raw/*.pdf
+data/raw/*.pptx
+data/raw/*.tmp
+data/raw/*.shp
+data/raw/*.dbf
+data/raw/*.shx
+data/raw/*.prj
+data/raw/*.cpg
+data/raw/*.add
+data/raw/*.err
+data/raw/*.csv
+
+# 데이터 - external 중 용량 큰 원본 (공공 재다운로드 가능)
+data/external/tram/*.jpg
+data/external/tram/*.pdf
+data/external/tram/pdf_pages/
+data/external/**/*.sbn
+data/external/**/*.sbx
+data/external/**/*.shp.xml
+
+# 대용량 그래프 캐시 (재생성 가능)
+data/processed/*.graphml
+
+# 가벼운 데이터는 화이트리스트로 유지
+!data/raw/README.md
+!data/external/README.md

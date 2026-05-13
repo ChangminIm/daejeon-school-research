@@ -1,0 +1,30 @@
+# 대전광역시교육청 통학지원 외부환경분석 - 의존성
+# Python 3.11+ 권장 (개발: Python 3.14)
+
+# 데이터 처리
+pandas>=2.0
+numpy>=1.24
+openpyxl>=3.1
+
+# 공간 분석
+geopandas>=0.14
+shapely>=2.0
+pyproj>=3.6
+pyogrio>=0.8
+
+# 시각화
+folium>=0.15
+branca>=0.7
+matplotlib>=3.7
+
+# 네트워크/도로
+osmnx>=2.0
+networkx>=3.0
+
+# 기타
+scikit-learn>=1.3
+requests>=2.31
+python-dotenv>=1.0
+tqdm>=4.65
+PyMuPDF>=1.24
+pypdf>=4.0
