@@ -3,7 +3,7 @@
 > **국립공주대학교 정책연구용역** (외부환경분석 / 도시개발 파트)
 > 도시개발(재개발·재건축·트램·신규 인프라)이 학교 통학환경에 미치는 영향을 GIS 공간분석으로 정량화한 연구입니다.
 
-🔗 **라이브 데모**: https://ChangminIm.github.io/daejeon-school-research/
+🔗 **라이브 데모**: https://changminim.github.io/daejeon-school-research/
 
 ---
 
