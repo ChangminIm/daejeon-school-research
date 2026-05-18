@@ -688,6 +688,16 @@ def add_current_bus14(m, schools_df):
 
 
 # ===== KDE 히트맵 (탐색용, 점수 산식 미반영) =====
+# ColorBrewer Reds 5단계 — 학생/도시개발 두 KDE 동일 적용 (가중 의미만 다름)
+RED_GRADIENT = {
+    0.2: "#FEE5D9",
+    0.4: "#FCAE91",
+    0.6: "#FB6A4A",
+    0.8: "#DE2D26",
+    1.0: "#A50F15",
+}
+
+
 def build_kde_data():
     """folium.plugins.HeatMap에 넣을 데이터 2종 생성
 
@@ -715,34 +725,37 @@ def build_kde_data():
 
 
 def add_kde_layers(m):
-    """KDE 히트맵 2종 추가 — 모두 기본 OFF, 탐색용."""
+    """KDE 히트맵 2종 추가 — 모두 기본 OFF, 탐색용.
+    학생/도시개발 동일 RED_GRADIENT (가중 데이터만 다름)."""
     kde_students, kde_redev = build_kde_data()
 
     fg_kde_students = folium.FeatureGroup(
         name="🌡️ 학생 분포 (학생수 가중)", overlay=True, show=False
     )
-    HeatMap(
+    heatmap_students = HeatMap(
         kde_students,
         radius=KDE_HEATMAP_RADIUS,
         blur=KDE_HEATMAP_BLUR,
         min_opacity=KDE_HEATMAP_MIN_OPACITY,
-        gradient={0.2: "blue", 0.4: "cyan", 0.6: "lime", 0.8: "yellow", 1.0: "red"},
-    ).add_to(fg_kde_students)
+        gradient=RED_GRADIENT,
+    )
+    heatmap_students.add_to(fg_kde_students)
     m.add_child(fg_kde_students)
 
     fg_kde_redev = folium.FeatureGroup(
         name="🏗️ 도시개발 압력 (재개발 세대수)", overlay=True, show=False
     )
-    HeatMap(
+    heatmap_redev = HeatMap(
         kde_redev,
         radius=KDE_HEATMAP_RADIUS,
         blur=KDE_HEATMAP_BLUR,
         min_opacity=KDE_HEATMAP_MIN_OPACITY,
-        gradient={0.2: "#FFF3B0", 0.4: "#FECF7B", 0.6: "#FB8C00", 0.8: "#E64A19", 1.0: "#B71C1C"},
-    ).add_to(fg_kde_redev)
+        gradient=RED_GRADIENT,
+    )
+    heatmap_redev.add_to(fg_kde_redev)
     m.add_child(fg_kde_redev)
 
-    return [fg_kde_students, fg_kde_redev]
+    return [fg_kde_students, fg_kde_redev], [heatmap_students, heatmap_redev]
 
 
 # ===== 제목 박스 =====
@@ -851,7 +864,7 @@ def build_map(schools_df, output_filename="대전_외부환경분석_도시개�
     dev_fgs = add_devimpact_top30(m)
     elig_fgs = add_eligibility_top30(m, schools_df=schools_df)
     bus_fgs = add_current_bus14(m, schools_df)
-    kde_fgs = add_kde_layers(m)
+    kde_fgs, kde_heatmaps = add_kde_layers(m)
 
     if include_tram:
         try:
@@ -866,7 +879,7 @@ def build_map(schools_df, output_filename="대전_외부환경분석_도시개�
         admin_fgs=admin_fgs, school_fgs=school_fgs,
         elig_fgs=elig_fgs, bus_fgs=bus_fgs, integ_fgs=integ_fgs,
         dev_fgs=dev_fgs, redev_by_key=redev_by_key,
-        kde_fgs=kde_fgs,
+        kde_fgs=kde_fgs, kde_heatmaps=kde_heatmaps,
         schools_df=schools_df,
     )
 
@@ -888,7 +901,8 @@ def build_map(schools_df, output_filename="대전_외부환경분석_도시개�
 
 def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
                        elig_fgs, bus_fgs, integ_fgs, dev_fgs,
-                       redev_by_key, schools_df, kde_fgs=None):
+                       redev_by_key, schools_df, kde_fgs=None,
+                       kde_heatmaps=None):
     """커스텀 HTML+CSS+JS 레이어 패널 + window 노출 + 초기 ON/OFF 정렬."""
     fg_sigungu = admin_fgs[0] if len(admin_fgs) > 0 else None
     fg_dong = admin_fgs[1] if len(admin_fgs) > 1 else None
@@ -905,6 +919,10 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
     fg_ipan = redev_by_key.get("입안")
     fg_kde_students = kde_fgs[0] if kde_fgs and len(kde_fgs) > 0 else None
     fg_kde_redev = kde_fgs[1] if kde_fgs and len(kde_fgs) > 1 else None
+    hm_students = kde_heatmaps[0] if kde_heatmaps and len(kde_heatmaps) > 0 else None
+    hm_redev = kde_heatmaps[1] if kde_heatmaps and len(kde_heatmaps) > 1 else None
+    hm_students_v = hm_students.get_name() if hm_students else None
+    hm_redev_v = hm_redev.get_name() if hm_redev else None
 
     # 카운트 동적
     n_elem = int((schools_df["학교급"] == "초").sum())
@@ -939,10 +957,16 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
                           fg_kde_students, fg_kde_redev]
         if fg is not None
     ]
+    hm_names = [v for v in [hm_students_v, hm_redev_v] if v]
     expose_lines = "\n".join(
         f"  try {{ window['{nm}'] = {nm}; }} catch(e) {{}}"
-        for nm in [osm_v, gray_v, black_v] + all_fg_names
+        for nm in [osm_v, gray_v, black_v] + all_fg_names + hm_names
     )
+    # 표준 별칭 — 슬라이더 JS에서 안정적으로 참조
+    if hm_students_v:
+        expose_lines += f"\n  try {{ window.heatmap_students = {hm_students_v}; }} catch(e) {{}}"
+    if hm_redev_v:
+        expose_lines += f"\n  try {{ window.heatmap_redev = {hm_redev_v}; }} catch(e) {{}}"
     m.get_root().script.add_child(folium.Element(
         f"// expose layer vars to window\n{expose_lines}"
     ))
@@ -1004,6 +1028,19 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
     <div class="lp-body">
       <label><input type="checkbox" onchange="lpLayer(this,'{n(fg_kde_students)}')"> 🌡️ 학생 분포 (학생수 가중)</label>
       <label><input type="checkbox" onchange="lpLayer(this,'{n(fg_kde_redev)}')"> 🏗️ 도시개발 압력 (재개발 세대수)</label>
+      <div class="lp-kde-slider">
+        <div class="lp-kde-row">
+          <span>대역폭 (radius)</span>
+          <span><strong id="kde-radius-val">{KDE_HEATMAP_RADIUS}</strong> px</span>
+        </div>
+        <input type="range" min="10" max="60" value="{KDE_HEATMAP_RADIUS}" step="2"
+               id="kde-radius-slider"
+               oninput="lpKdeRadius(this.value)">
+        <div class="lp-kde-ticks">
+          <span>좁게</span>
+          <span>넓게</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1036,6 +1073,35 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
 }}
 .lp-bg label {{ display: inline-block; margin-right: 6px; }}
 .arrow {{ float: right; color: #666; font-size: 11px; }}
+.lp-kde-slider {{
+  margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee;
+}}
+.lp-kde-row {{
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: #555; margin-bottom: 4px;
+}}
+.lp-kde-ticks {{
+  display: flex; justify-content: space-between;
+  font-size: 9px; color: #999; margin-top: 2px;
+}}
+#layer-panel input[type="range"] {{
+  -webkit-appearance: none;
+  width: 100%; height: 4px;
+  background: linear-gradient(to right, #FEE5D9, #A50F15);
+  border-radius: 2px; outline: none; cursor: pointer;
+}}
+#layer-panel input[type="range"]::-webkit-slider-thumb {{
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  background: #C0392B; border-radius: 50%;
+  cursor: pointer; border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}}
+#layer-panel input[type="range"]::-moz-range-thumb {{
+  width: 14px; height: 14px;
+  background: #C0392B; border-radius: 50%;
+  cursor: pointer; border: 2px solid white;
+}}
 </style>
 <script>
 function lpToggle(header) {{
@@ -1062,6 +1128,18 @@ function lpLayer(checkbox, layerName) {{
   }} else {{
     {map_var}.removeLayer(layer);
   }}
+}}
+function lpKdeRadius(value) {{
+  var radius = parseInt(value);
+  var blur = Math.round(radius * 0.75);
+  var lbl = document.getElementById('kde-radius-val');
+  if (lbl) lbl.textContent = radius;
+  ['heatmap_students', 'heatmap_redev'].forEach(function(key) {{
+    var hm = window[key];
+    if (!hm) return;
+    try {{ hm.setOptions({{radius: radius, blur: blur}}); }} catch(e) {{}}
+    try {{ if (hm.redraw) hm.redraw(); }} catch(e) {{}}
+  }});
 }}
 // base tile lazy resolve (window 노출 이후 호출 보장)
 function _lpBgGet() {{
