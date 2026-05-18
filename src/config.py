@@ -109,6 +109,11 @@ SCENARIOS = {
     "장기": {"기간": "2030+",     "설명": "통학수요 안정화"},
 }
 
+# ===== KDE 시각화 파라미터 (탐색용, 점수 산식 미반영) =====
+KDE_HEATMAP_RADIUS = 30      # HeatMap 픽셀 반경 (대역폭 2500m 근사)
+KDE_HEATMAP_BLUR = 25        # 블러 강도
+KDE_HEATMAP_MIN_OPACITY = 0.3
+
 # ===== API 키 =====
 VWORLD_API_KEY = os.environ.get("VWORLD_API_KEY")
 VWORLD_GEOCODE_URL = "https://api.vworld.kr/req/address"

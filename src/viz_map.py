@@ -6,10 +6,11 @@ import pandas as pd
 import numpy as np
 import geopandas as gpd
 import folium
-from folium.plugins import MiniMap, Fullscreen, MeasureControl
+from folium.plugins import MiniMap, Fullscreen, MeasureControl, HeatMap
 from src.config import (
     DATA_PROCESSED, DATA_EXTERNAL, DATA_GEOJSON, OUTPUT_MAPS,
-    DAEJEON_CENTER, DAEJEON_ZOOM, GU_COLORS, ESTIMATED_STUDENT_RATES
+    DAEJEON_CENTER, DAEJEON_ZOOM, GU_COLORS, ESTIMATED_STUDENT_RATES,
+    KDE_HEATMAP_RADIUS, KDE_HEATMAP_BLUR, KDE_HEATMAP_MIN_OPACITY,
 )
 from src.coords_data import load_redev_projects
 
@@ -686,6 +687,64 @@ def add_current_bus14(m, schools_df):
     return [fg]
 
 
+# ===== KDE 히트맵 (탐색용, 점수 산식 미반영) =====
+def build_kde_data():
+    """folium.plugins.HeatMap에 넣을 데이터 2종 생성
+
+    - kde_students: 학생수 가중 (학생 분포 밀도)
+    - kde_redev: 재개발 진행 사업의 세대수 가중 (도시개발 압력)
+    """
+    schools = pd.read_csv(DATA_PROCESSED / "schools_geocoded.csv")
+    kde_students = [
+        [row["lat"], row["lon"], float(row["학생수합계"])]
+        for _, row in schools.iterrows()
+        if pd.notna(row["lat"]) and row["학생수합계"] > 0
+    ]
+
+    redev = pd.read_csv(DATA_PROCESSED / "redev_projects_geocoded.csv")
+    redev_active = redev[
+        (redev["상태"] == "진행")
+        & (redev["세대수"].notna())
+        & (redev["lat"].notna())
+    ]
+    kde_redev = [
+        [row["lat"], row["lon"], float(row["세대수"])]
+        for _, row in redev_active.iterrows()
+    ]
+    return kde_students, kde_redev
+
+
+def add_kde_layers(m):
+    """KDE 히트맵 2종 추가 — 모두 기본 OFF, 탐색용."""
+    kde_students, kde_redev = build_kde_data()
+
+    fg_kde_students = folium.FeatureGroup(
+        name="🌡️ 학생 분포 (학생수 가중)", overlay=True, show=False
+    )
+    HeatMap(
+        kde_students,
+        radius=KDE_HEATMAP_RADIUS,
+        blur=KDE_HEATMAP_BLUR,
+        min_opacity=KDE_HEATMAP_MIN_OPACITY,
+        gradient={0.2: "blue", 0.4: "cyan", 0.6: "lime", 0.8: "yellow", 1.0: "red"},
+    ).add_to(fg_kde_students)
+    m.add_child(fg_kde_students)
+
+    fg_kde_redev = folium.FeatureGroup(
+        name="🏗️ 도시개발 압력 (재개발 세대수)", overlay=True, show=False
+    )
+    HeatMap(
+        kde_redev,
+        radius=KDE_HEATMAP_RADIUS,
+        blur=KDE_HEATMAP_BLUR,
+        min_opacity=KDE_HEATMAP_MIN_OPACITY,
+        gradient={0.2: "#FFF3B0", 0.4: "#FECF7B", 0.6: "#FB8C00", 0.8: "#E64A19", 1.0: "#B71C1C"},
+    ).add_to(fg_kde_redev)
+    m.add_child(fg_kde_redev)
+
+    return [fg_kde_students, fg_kde_redev]
+
+
 # ===== 제목 박스 =====
 def add_title_box(m, schools_df, projects=None):
     """제목 박스. 사업 건수는 동적으로 '진행 N건' 표기."""
@@ -792,6 +851,7 @@ def build_map(schools_df, output_filename="대전_외부환경분석_도시개�
     dev_fgs = add_devimpact_top30(m)
     elig_fgs = add_eligibility_top30(m, schools_df=schools_df)
     bus_fgs = add_current_bus14(m, schools_df)
+    kde_fgs = add_kde_layers(m)
 
     if include_tram:
         try:
@@ -806,6 +866,7 @@ def build_map(schools_df, output_filename="대전_외부환경분석_도시개�
         admin_fgs=admin_fgs, school_fgs=school_fgs,
         elig_fgs=elig_fgs, bus_fgs=bus_fgs, integ_fgs=integ_fgs,
         dev_fgs=dev_fgs, redev_by_key=redev_by_key,
+        kde_fgs=kde_fgs,
         schools_df=schools_df,
     )
 
@@ -827,7 +888,7 @@ def build_map(schools_df, output_filename="대전_외부환경분석_도시개�
 
 def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
                        elig_fgs, bus_fgs, integ_fgs, dev_fgs,
-                       redev_by_key, schools_df):
+                       redev_by_key, schools_df, kde_fgs=None):
     """커스텀 HTML+CSS+JS 레이어 패널 + window 노출 + 초기 ON/OFF 정렬."""
     fg_sigungu = admin_fgs[0] if len(admin_fgs) > 0 else None
     fg_dong = admin_fgs[1] if len(admin_fgs) > 1 else None
@@ -842,6 +903,8 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
     fg_siheng = redev_by_key.get("시행")
     fg_johap = redev_by_key.get("조합")
     fg_ipan = redev_by_key.get("입안")
+    fg_kde_students = kde_fgs[0] if kde_fgs and len(kde_fgs) > 0 else None
+    fg_kde_redev = kde_fgs[1] if kde_fgs and len(kde_fgs) > 1 else None
 
     # 카운트 동적
     n_elem = int((schools_df["학교급"] == "초").sum())
@@ -872,7 +935,8 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
     all_fg_names = [
         n(fg) for fg in [fg_sigungu, fg_dong, fg_elem, fg_mid,
                           fg_elig, fg_bus14, fg_integ, fg_dev,
-                          fg_gongsa, fg_gwanli, fg_siheng, fg_johap, fg_ipan]
+                          fg_gongsa, fg_gwanli, fg_siheng, fg_johap, fg_ipan,
+                          fg_kde_students, fg_kde_redev]
         if fg is not None
     ]
     expose_lines = "\n".join(
@@ -891,6 +955,8 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
     if fg_dev: off_layers.append(n(fg_dev))
     for fg in [fg_gongsa, fg_gwanli, fg_siheng, fg_johap, fg_ipan]:
         if fg: off_layers.append(n(fg))
+    if fg_kde_students: off_layers.append(n(fg_kde_students))
+    if fg_kde_redev: off_layers.append(n(fg_kde_redev))
 
     panel_html = f"""
 <div id="layer-panel">
@@ -931,6 +997,13 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
       <label><input type="checkbox" onchange="lpLayer(this,'{n(fg_siheng)}')"> 🟡 사업시행</label>
       <label><input type="checkbox" onchange="lpLayer(this,'{n(fg_johap)}')"> 🟢 조합·추진위</label>
       <label><input type="checkbox" onchange="lpLayer(this,'{n(fg_ipan)}')"> ⚪ 입안·미정</label>
+    </div>
+  </div>
+  <div class="lp-group">
+    <div class="lp-header" onclick="lpToggle(this)">🔥 밀도 분석 <span class="arrow">▼</span></div>
+    <div class="lp-body">
+      <label><input type="checkbox" onchange="lpLayer(this,'{n(fg_kde_students)}')"> 🌡️ 학생 분포 (학생수 가중)</label>
+      <label><input type="checkbox" onchange="lpLayer(this,'{n(fg_kde_redev)}')"> 🏗️ 도시개발 압력 (재개발 세대수)</label>
     </div>
   </div>
 </div>

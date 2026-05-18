@@ -12,15 +12,13 @@
 산출:
   - outputs/tables/통학지원_우선순위_학교별.csv (전체)
   - outputs/tables/통학지원_우선순위_상위30교.csv
-  - outputs/figures/우선순위_히트맵.png (구 × 학교급 분포)
 """
 import pandas as pd
 import numpy as np
 import geopandas as gpd
-import matplotlib.pyplot as plt
 from shapely.geometry import Point
 from src.config import (
-    DATA_PROCESSED, OUTPUT_TABLES, OUTPUT_FIGURES,
+    DATA_PROCESSED, OUTPUT_TABLES,
     CRS_WGS84, CRS_KOREA, GU_COLORS,
     ESTIMATED_STUDENT_RATES, PRIORITY_WEIGHTS, IMMINENCE_WEIGHTS,
 )
@@ -228,7 +226,7 @@ def _explain_score(row, weights):
 
 
 def save_results(df, top_n=30):
-    """전체 + 상위 N교 + 히트맵 저장."""
+    """전체 + 상위 N교 CSV 저장."""
     full_out = OUTPUT_TABLES / "통학지원_우선순위_학교별.csv"
     df.to_csv(full_out, index=False, encoding="utf-8-sig")
 
@@ -236,43 +234,17 @@ def save_results(df, top_n=30):
     top_out = OUTPUT_TABLES / f"통학지원_우선순위_상위{top_n}교.csv"
     top.to_csv(top_out, index=False, encoding="utf-8-sig")
 
-    # 히트맵: 구 × 학교급별 상위 학교수 분포
-    pivot = (
-        df.head(50)
-        .groupby(["구", "학교급"])
-        .size()
-        .unstack(fill_value=0)
-    )
-    fig, ax = plt.subplots(figsize=(7, 4.5))
-    im = ax.imshow(pivot.values, cmap="YlOrRd", aspect="auto")
-    ax.set_xticks(range(len(pivot.columns)))
-    ax.set_xticklabels(pivot.columns)
-    ax.set_yticks(range(len(pivot.index)))
-    ax.set_yticklabels(pivot.index)
-    ax.set_title("Top 50 priority schools — by gu × level", fontsize=11)
-    for i in range(len(pivot.index)):
-        for j in range(len(pivot.columns)):
-            v = pivot.values[i, j]
-            ax.text(j, i, int(v), ha="center", va="center",
-                    color="white" if v > pivot.values.max()/2 else "black")
-    plt.colorbar(im, ax=ax, label="count")
-    plt.tight_layout()
-    fig_out = OUTPUT_FIGURES / "우선순위_히트맵.png"
-    plt.savefig(fig_out, dpi=200, bbox_inches="tight")
-    plt.close()
-
-    return full_out, top_out, fig_out
+    return full_out, top_out
 
 
 def run():
     schools_df = pd.read_csv(DATA_PROCESSED / "schools_with_impact.csv")
     print(f"[priority] 학교 {len(schools_df)}교 분석 시작")
     df = compute_priority(schools_df, verbose=True)
-    full, top, fig = save_results(df, top_n=30)
+    full, top = save_results(df, top_n=30)
 
     print(f"\n✅ 전체: {full.name} ({len(df)}교)")
     print(f"✅ 상위 30: {top.name}")
-    print(f"✅ 히트맵: {fig.name}")
     print(f"\n=== 상위 10교 ===")
     show_cols = ["순위", "학교명", "학교급", "구", "학생수", "종합점수",
                  "영향사업수", "점수설명"]
