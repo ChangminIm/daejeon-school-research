@@ -688,13 +688,13 @@ def add_current_bus14(m, schools_df):
 
 
 # ===== KDE 히트맵 (탐색용, 점수 산식 미반영) =====
-# ColorBrewer Reds 5단계 — 학생/도시개발 두 KDE 동일 적용 (가중 의미만 다름)
-RED_GRADIENT = {
-    0.2: "#FEE5D9",
-    0.4: "#FCAE91",
-    0.6: "#FB6A4A",
-    0.8: "#DE2D26",
-    1.0: "#A50F15",
+# 노랑→오렌지→빨강 5단계 — 학생/도시개발 두 KDE 동일 적용 (가중 의미만 다름)
+KDE_GRADIENT = {
+    0.2: "#FFF3B0",
+    0.4: "#FECF7B",
+    0.6: "#FB8C00",
+    0.8: "#E64A19",
+    1.0: "#B71C1C",
 }
 
 
@@ -737,7 +737,7 @@ def add_kde_layers(m):
         radius=KDE_HEATMAP_RADIUS,
         blur=KDE_HEATMAP_BLUR,
         min_opacity=KDE_HEATMAP_MIN_OPACITY,
-        gradient=RED_GRADIENT,
+        gradient=KDE_GRADIENT,
     )
     heatmap_students.add_to(fg_kde_students)
     m.add_child(fg_kde_students)
@@ -750,7 +750,7 @@ def add_kde_layers(m):
         radius=KDE_HEATMAP_RADIUS,
         blur=KDE_HEATMAP_BLUR,
         min_opacity=KDE_HEATMAP_MIN_OPACITY,
-        gradient=RED_GRADIENT,
+        gradient=KDE_GRADIENT,
     )
     heatmap_redev.add_to(fg_kde_redev)
     m.add_child(fg_kde_redev)
@@ -962,14 +962,30 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
         f"  try {{ window['{nm}'] = {nm}; }} catch(e) {{}}"
         for nm in [osm_v, gray_v, black_v] + all_fg_names + hm_names
     )
-    # 표준 별칭 — 슬라이더 JS에서 안정적으로 참조
-    if hm_students_v:
-        expose_lines += f"\n  try {{ window.heatmap_students = {hm_students_v}; }} catch(e) {{}}"
-    if hm_redev_v:
-        expose_lines += f"\n  try {{ window.heatmap_redev = {hm_redev_v}; }} catch(e) {{}}"
     m.get_root().script.add_child(folium.Element(
         f"// expose layer vars to window\n{expose_lines}"
     ))
+
+    # KDE 슬라이더용 명시 노출 — folium IIFE 종료 후 setTimeout 500ms로 보장
+    fg_kde_students_v = n(fg_kde_students)
+    fg_kde_redev_v = n(fg_kde_redev)
+    if hm_students_v and hm_redev_v:
+        m.get_root().script.add_child(folium.Element(f"""
+  // KDE HeatLayer / FeatureGroup 명시 노출 (페이지 로드 후 500ms)
+  setTimeout(function() {{
+    try {{
+      window.heatLayer_students = {hm_students_v};
+      window.heatLayer_redev = {hm_redev_v};
+      window.fg_kde_students_ref = {fg_kde_students_v};
+      window.fg_kde_redev_ref = {fg_kde_redev_v};
+      console.log("[KDE] HeatLayers exposed:",
+                  !!window.heatLayer_students,
+                  !!window.heatLayer_redev);
+    }} catch(e) {{
+      console.error("[KDE] HeatLayer 노출 실패:", e);
+    }}
+  }}, 500);
+"""))
 
     # 초기 ON/OFF 정렬 — show=False FG들은 page-load 시 removeLayer
     # (folium은 add_to만 하면 visible 시작이라 OFF FG는 명시적으로 끔)
@@ -1035,7 +1051,7 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
         </div>
         <input type="range" min="10" max="60" value="{KDE_HEATMAP_RADIUS}" step="2"
                id="kde-radius-slider"
-               oninput="lpKdeRadius(this.value)">
+               oninput="updateKdeRadius(this.value)">
         <div class="lp-kde-ticks">
           <span>좁게</span>
           <span>넓게</span>
@@ -1087,7 +1103,7 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
 #layer-panel input[type="range"] {{
   -webkit-appearance: none;
   width: 100%; height: 4px;
-  background: linear-gradient(to right, #FEE5D9, #A50F15);
+  background: linear-gradient(to right, #FFF3B0, #B71C1C);
   border-radius: 2px; outline: none; cursor: pointer;
 }}
 #layer-panel input[type="range"]::-webkit-slider-thumb {{
@@ -1129,17 +1145,40 @@ function lpLayer(checkbox, layerName) {{
     {map_var}.removeLayer(layer);
   }}
 }}
-function lpKdeRadius(value) {{
+function updateKdeRadius(value) {{
   var radius = parseInt(value);
   var blur = Math.round(radius * 0.75);
   var lbl = document.getElementById('kde-radius-val');
   if (lbl) lbl.textContent = radius;
-  ['heatmap_students', 'heatmap_redev'].forEach(function(key) {{
-    var hm = window[key];
-    if (!hm) return;
-    try {{ hm.setOptions({{radius: radius, blur: blur}}); }} catch(e) {{}}
-    try {{ if (hm.redraw) hm.redraw(); }} catch(e) {{}}
-  }});
+
+  function apply(layer) {{
+    if (!layer || typeof layer.setOptions !== 'function') return false;
+    try {{
+      layer.setOptions({{radius: radius, blur: blur}});
+      if (typeof layer.redraw === 'function') layer.redraw();
+      return true;
+    }} catch(e) {{
+      console.error('[KDE] setOptions 실패:', e);
+      return false;
+    }}
+  }}
+
+  var applied = 0;
+  // 1차: 직접 노출된 HeatLayer
+  if (apply(window.heatLayer_students)) applied++;
+  if (apply(window.heatLayer_redev)) applied++;
+
+  // 2차 폴백: FeatureGroup 자식 layer 순회
+  if (applied === 0) {{
+    [window.fg_kde_students_ref, window.fg_kde_redev_ref].forEach(function(fg) {{
+      if (!fg || typeof fg.eachLayer !== 'function') return;
+      fg.eachLayer(function(layer) {{
+        if (apply(layer)) applied++;
+      }});
+    }});
+  }}
+
+  console.log('[KDE] radius:', radius, 'applied:', applied);
 }}
 // base tile lazy resolve (window 노출 이후 호출 보장)
 function _lpBgGet() {{
