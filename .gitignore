@@ -57,6 +57,13 @@ data/external/**/*.shp.xml
 # 대용량 그래프 캐시 (재생성 가능)
 data/processed/*.graphml
 
+# DEM/Slope 래스터 (원본 자르기 결과, 재생성 가능)
+data/external/dem/*.tif
+data/external/dem/*.tif.aux.xml
+data/external/dem/*.ovr
+data/external/dem/*.tfw
+!data/external/dem/.gitkeep
+
 # 가벼운 데이터는 화이트리스트로 유지
 !data/raw/README.md
 !data/external/README.md
