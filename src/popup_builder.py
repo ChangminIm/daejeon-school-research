@@ -25,7 +25,12 @@ _IMMINENCE_COLOR = {
 POPUP_CSS = """
 <style>
 .sp-popup { min-width: 320px; max-width: 380px; font-family: 'Malgun Gothic', sans-serif;
-            font-size: 13px; line-height: 1.5; }
+            font-size: 13px; line-height: 1.5;
+            max-height: 500px; overflow-y: auto; }
+.sp-popup::-webkit-scrollbar { width: 6px; }
+.sp-popup::-webkit-scrollbar-track { background: transparent; }
+.sp-popup::-webkit-scrollbar-thumb { background: #c8ccd4; border-radius: 3px; }
+.sp-popup::-webkit-scrollbar-thumb:hover { background: #a0a4ac; }
 .sp-popup hr { border: none; border-top: 1px solid #eee; margin: 8px 0; }
 .sp-popup .sp-title { font-size: 16px; font-weight: 700; color: #34495E; }
 .sp-popup .sp-rank-badge {
@@ -40,9 +45,16 @@ POPUP_CSS = """
 .sp-popup .sp-warn { color: #C62828; }
 .sp-popup .sp-bus-yes { color: #1ABC9C; font-weight: 700; }
 .sp-popup .sp-bus-no  { color: #999; }
-.sp-popup .sp-proj-row {
-    margin: 3px 0; font-size: 12px; padding-left: 4px;
+.sp-popup .sp-proj-row { margin: 3px 0; font-size: 12px; padding-left: 4px; }
+/* 영향사업 details 블록 */
+.sp-popup .sp-impact-details > summary {
+    cursor: pointer; list-style: none;
+    user-select: none;
 }
+.sp-popup .sp-impact-details > summary::-webkit-details-marker { display: none; }
+.sp-popup .sp-impact-details > summary::marker { content: ''; }
+.sp-popup .sp-impact-details[open] > summary { margin-bottom: 4px; }
+.sp-popup .sp-impact-body { padding-left: 2px; }
 </style>
 """
 
@@ -57,14 +69,19 @@ def _rank_strong(rank, total=243, threshold=30):
     return f'{rank}위 / {total}교'
 
 
-def _build_impact_row(영향사업목록_str, school_level, project_lookup):
-    """1km 영향사업 한 줄씩 + 예상 학생 유입 합산."""
+def _build_impact_block(영향사업목록_str, school_level, project_lookup):
+    """1km 영향사업 details 블록 — ≤5건은 펼침, ≥6건은 접힘."""
     if pd.isna(영향사업목록_str) or not str(영향사업목록_str).strip():
-        return '<div style="color:#888;font-size:12px;">영향권 내 사업 없음</div>'
+        return (
+            '<div class="sp-section">🏗️ 1km 영향권 내 사업</div>'
+            '<div style="color:#888;font-size:12px;">영향권 내 사업 없음</div>'
+        )
+
+    parts = [p.strip() for p in str(영향사업목록_str).split(";") if p.strip()]
+    count = len(parts)
 
     items = []
     total_seda = 0
-    parts = [p.strip() for p in str(영향사업목록_str).split(";") if p.strip()]
     for part in parts:
         if "(" in part and part.endswith(")"):
             name, imm = part.rsplit("(", 1)
@@ -90,13 +107,20 @@ def _build_impact_row(영향사업목록_str, school_level, project_lookup):
 
     rate = ESTIMATED_STUDENT_RATES.get(school_level, 0)
     inflow = int(round(total_seda * rate)) if total_seda else 0
-    header = (
-        f'<div style="font-size:12.5px;margin-bottom:4px;">'
-        f'<b>{len(parts)}건</b>'
-        f' · 예상 학생 유입 약 <b style="color:#C0392B;">{inflow:,}명</b>'
-        f'</div>'
+
+    open_attr = "open" if count <= 5 else ""
+    arrow = "" if count <= 5 else ' <span style="color:#888;font-weight:500;font-size:12px;">— 펼치기 ▶</span>'
+    summary_html = (
+        f'🏗️ 1km 영향권 내 사업 ({count}건, '
+        f'예상 학생 유입 <span style="color:#C0392B;">{inflow:,}명</span>){arrow}'
     )
-    return header + "".join(items)
+
+    return (
+        f'<details class="sp-impact-details" {open_attr}>'
+        f'<summary class="sp-section">{summary_html}</summary>'
+        f'<div class="sp-impact-body">{"".join(items)}</div>'
+        f'</details>'
+    )
 
 
 def _build_bus_row(bus_info):
@@ -202,11 +226,8 @@ def build_school_popup(school_row, ctx):
         f'</table>'
     )
 
-    # [영향사업]
-    impact = (
-        f'<div class="sp-section">🏗️ 1km 영향권 내 사업</div>'
-        f'{_build_impact_row(pri.get("영향사업목록", ""), level, proj_lookup)}'
-    )
+    # [영향사업] — details 블록 (≤5건 펼침/≥6건 접힘)
+    impact = _build_impact_block(pri.get("영향사업목록", ""), level, proj_lookup)
 
     # [현행 통학차량]
     bus_section = (

@@ -47,6 +47,17 @@ NEW_APT_STAGES = ["1_공사중", "2_관리처분"]
 PROGRESS_STAGES = ["1_공사중", "2_관리처분", "3_사업시행", "4_조합설립", "5_초기"]
 
 
+def _bus14_set(schools_df):
+    """현행 통학버스 14교의 정식 학교명 set."""
+    bus_csv = DATA_EXTERNAL / "bus" / "대전_현행통학차량_14개교.csv"
+    if not bus_csv.exists():
+        return set()
+    bus_df = pd.read_csv(bus_csv, encoding="utf-8-sig")
+    from src.integrated_priority import match_bus_to_schools
+    matched, _ = match_bus_to_schools(bus_df, schools_df)
+    return set(matched["정식학교명"].tolist())
+
+
 def _load_groups():
     schools = pd.read_csv(SCHOOLS_SLOPE_CSV, encoding="utf-8-sig")
     redev = pd.read_csv(REDEV_SLOPE_CSV, encoding="utf-8-sig")
@@ -59,7 +70,14 @@ def _load_groups():
         redev["통학영향_임박도"].isin(PROGRESS_STAGES), "slope_500m_mean"
     ].dropna().values
 
+    # C: 학교 전체 (가설 검정 A vs C용 — 기존 호환 유지)
     C = schools["slope_300m_mean"].dropna().values
+
+    # C': 14교 제외 학교, E: 14교 (사후 검증)
+    bus14 = _bus14_set(schools)
+    is_bus14 = schools["학교명"].isin(bus14)
+    C_prime = schools.loc[~is_bus14, "slope_300m_mean"].dropna().values
+    E = schools.loc[is_bus14, "slope_300m_mean"].dropna().values
 
     # D: 대전 slope random sample
     with rasterio.open(SLOPE_TIF) as src:
@@ -71,7 +89,7 @@ def _load_groups():
     n_sample = min(1000, len(valid_vals))
     D = rng.choice(valid_vals, size=n_sample, replace=False)
 
-    return {"A": A, "B": B, "C": C, "D": D}
+    return {"A": A, "B": B, "C": C, "C_prime": C_prime, "E": E, "D": D}
 
 
 def _desc_row(name, label, arr):
@@ -87,10 +105,11 @@ def _desc_row(name, label, arr):
 
 def _print_desc(groups):
     rows = [
-        _desc_row("A", "신규 아파트 (공사중+관리처분)", groups["A"]),
-        _desc_row("B", "진행 전체 (1·2·3·4·5단계)",   groups["B"]),
-        _desc_row("C", "학교 245교 (slope_300m_mean)", groups["C"]),
-        _desc_row("D", "대전 영역 random 1000",        groups["D"]),
+        _desc_row("A",  "신규 아파트 (공사중+관리처분)",      groups["A"]),
+        _desc_row("B",  "진행 전체 (1·2·3·4·5단계)",         groups["B"]),
+        _desc_row("C'", "학교 (14교 제외, n=228)",            groups["C_prime"]),
+        _desc_row("E",  "현행 14교 ★ (통학버스 운영)",       groups["E"]),
+        _desc_row("D",  "대전 영역 random 1000",              groups["D"]),
     ]
     print("\n[그룹별 기술통계]")
     print(f"  {'그룹':<4} {'설명':<32} {'n':>5} {'mean':>8} {'median':>8} {'std':>8}")
@@ -148,17 +167,18 @@ def _test_two_groups(a, b, label_a, label_b):
 
 
 def _plot_boxplot(groups, test_results):
-    data = [groups["A"], groups["B"], groups["C"], groups["D"]]
+    data = [groups["A"], groups["B"], groups["C_prime"], groups["E"], groups["D"]]
     labels = [
         f"A 신규 아파트\n(공사중+관리처분)\nn={len(groups['A'])}",
         f"B 진행 전체\n(1·2·3·4·5단계)\nn={len(groups['B'])}",
-        f"C 학교 245교\n(300m mean)\nn={len(groups['C'])}",
+        f"C' 학교\n(14교 제외)\nn={len(groups['C_prime'])}",
+        f"★ E 현행 14교 ★\n(통학버스 운영)\nn={len(groups['E'])}",
         f"D 대전 영역\n(random 1000)\nn={len(groups['D'])}",
     ]
-    # 색상: 공사중·관리처분=빨강+주황 톤 → A는 빨강, B는 주황, C 학교=파랑, D 대전=회색
-    colors = ["#D32F2F", "#F57C00", "#1976D2", "#9E9E9E"]
+    # 색상: A 빨강 / B 주황 / C' 파랑(중간톤) / E 진네이비(강조) / D 회색
+    colors = ["#D32F2F", "#F57C00", "#1976D2", "#0D47A1", "#9E9E9E"]
 
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(14, 7))
     bp = ax.boxplot(
         data,
         labels=labels,
@@ -169,9 +189,15 @@ def _plot_boxplot(groups, test_results):
         medianprops=dict(color="black", linewidth=1.5),
         flierprops=dict(marker=".", markersize=3, alpha=0.4),
     )
-    for patch, c in zip(bp["boxes"], colors):
+    for i, (patch, c) in enumerate(zip(bp["boxes"], colors)):
         patch.set_facecolor(c)
-        patch.set_alpha(0.7)
+        # E(14교, idx=3)는 강조: alpha 높이고 테두리 굵게
+        if i == 3:
+            patch.set_alpha(0.85)
+            patch.set_edgecolor("#0D47A1")
+            patch.set_linewidth(2.0)
+        else:
+            patch.set_alpha(0.7)
 
     ax.set_ylabel("경사도 (°)", fontsize=12)
     ax.set_title("현행 통학차량 운영 학교의 경사도 분포 — 점수 산식의 사후 검증",
@@ -185,24 +211,26 @@ def _plot_boxplot(groups, test_results):
             ax.text(i, arr.max() * 0.95 + 1, f"μ={np.mean(arr):.1f}°",
                     ha="center", fontsize=9, color="#333")
 
-    # 캡션: 가설 검정 + 14교 사후 검증 결론 (Phase B-2)
+    # 캡션: 사후 검증 (E vs C') + 가설 검정 (A vs C) 두 줄
+    p_ec = test_results["E_vs_Cprime"]["p_mwu"]
     p_ac = test_results["A_vs_C"]["p_mwu"]
-    p_ab = test_results["A_vs_B"]["p_mwu"]
+    e_mean = float(np.mean(groups["E"])) if len(groups["E"]) else 0
+    cp_mean = float(np.mean(groups["C_prime"])) if len(groups["C_prime"]) else 0
+
+    p_ec_str = "<0.0001" if p_ec < 0.0001 else f"={p_ec:.4f}"
     cap_top = (
-        f"Mann-Whitney U  |  A vs C: p={p_ac:.4f}"
-        f"{' *' if p_ac < 0.05 else ''}"
-        f"   |   A vs B: p={p_ab:.4f}"
-        f"{' *' if p_ab < 0.05 else ''}"
+        f"Mann-Whitney U  |  E vs C': p{p_ec_str}"
+        f"{' ★' if p_ec < 0.05 else ''}"
+        f"   |   A vs C: p={p_ac:.4f} (가설 기각)"
     )
     cap_bottom = (
-        "사후 검증: 현행 14교 평균 8.0°, 나머지 학교 평균 4.4°, "
-        "Mann-Whitney p<0.0001 → 14교는 통계적으로 더 가파른 곳에 위치 "
-        "(점수 산식 외 보조 신호)"
+        f"현행 14교(E)는 평균 경사 {e_mean:.1f}°로 나머지 학교(C', {cp_mean:.1f}°)의 약 2배. "
+        f"Mann-Whitney p<0.0001 → 통학지원이 산악 외곽 학교에 집중되어 있음을 데이터로 확인"
     )
-    fig.text(0.5, 0.04, cap_top, ha="center", fontsize=10, style="italic", color="#555")
-    fig.text(0.5, 0.01, cap_bottom, ha="center", fontsize=9.5, color="#C0392B")
+    fig.text(0.5, 0.04, cap_top, ha="center", fontsize=10.5, style="italic", color="#333")
+    fig.text(0.5, 0.005, cap_bottom, ha="center", fontsize=10, color="#0D47A1", fontweight="bold")
 
-    fig.tight_layout(rect=(0, 0.07, 1, 1))
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
     OUT_PNG.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT_PNG, dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -220,9 +248,11 @@ def main():
     print("\n[가설 검정]")
     results = {}
     results["A_vs_C"] = _test_two_groups(groups["A"], groups["C"],
-                                         "A (신규 아파트)", "C (학교 245교)")
+                                         "A (신규 아파트)", "C (학교 243교)")
     results["A_vs_B"] = _test_two_groups(groups["A"], groups["B"],
                                          "A (신규 아파트)", "B (진행 전체)")
+    results["E_vs_Cprime"] = _test_two_groups(groups["E"], groups["C_prime"],
+                                              "E (현행 14교)", "C' (학교 14교 제외)")
 
     _plot_boxplot(groups, results)
 

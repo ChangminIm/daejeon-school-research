@@ -55,10 +55,26 @@ CSV_DESC = {
 
 # 정적 도면 부가 설명
 FIG_DESC = {
+    "01_종합지도.png":
+        "학교 243교 · 재개발 110건 · 적격성 상위 30교 · 현행 14교를 한 장에",
+    "02_재개발임박도.png":
+        "대전 도시정비사업 추진단계(임박도)별 분포 + 사업수·세대수 집계",
+    "03_적격성상위30교.png":
+        "신규 검토 대상 30교 — 등급별(1~5/6~15/16~30) 시각화 + 상위 5교 라벨",
+    "04_14교vs상위30교.png":
+        "현행 통학차량 운영 14교 vs 신규 검토 30교 위치 비교",
+    "05_경사도음영_14교.png":
+        "5m DEM 경사도 음영 + 14교 분포 — 산악권 집중 시각적 확인 (p<0.0001)",
+    "06_KDE학생분포.png":
+        "학교 학생수 가중 KDE — 학생 도심 밀집 vs 신규 검토 외곽 분산",
     "slope_hypothesis.png":
-        "현행 통학차량 운영 학교의 경사도 분포 — 점수 산식의 사후 검증 (Phase B-1)",
-    "dem_clip_preview.png":
-        "대전 경계 5m DEM/Slope 클립 결과 미리보기 (참고용)",
+        "현행 통학차량 운영 학교의 경사도 분포 — 점수 산식의 사후 검증 (5박스)",
+}
+
+# 정적 도면 제외 목록 (개발용 미리보기 등)
+FIG_EXCLUDE = {
+    "dem_clip_preview.png",  # 개발용, 보고서 아님
+    "우선순위_히트맵.png",   # 이미 폐기됨 (혹시 잔존 시)
 }
 
 
@@ -82,11 +98,32 @@ def _scan_csvs():
     return items
 
 
+def _figure_sort_key(name: str):
+    """번호 있는 파일(01_...) 먼저, 번호 없는 파일은 뒤로 (알파벳 순)."""
+    if len(name) >= 2 and name[:2].isdigit():
+        return (0, name)
+    return (1, name)
+
+
+def _figure_title(name: str) -> str:
+    """파일명에서 .png 제거하고 첫 번호 뒤 '_'를 '. '로 변환.
+    예: '01_종합지도.png' → '01. 종합지도'
+        'slope_hypothesis.png' → 'slope_hypothesis'
+    """
+    stem = name.removesuffix(".png")
+    if len(stem) >= 3 and stem[:2].isdigit() and stem[2] == "_":
+        return stem[:2] + ". " + stem[3:].replace("_", " ")
+    return stem
+
+
 def _scan_figures():
     items = []
-    for p in sorted(OUTPUT_FIGURES.glob("*.png")):
+    for p in sorted(OUTPUT_FIGURES.glob("*.png"), key=lambda x: _figure_sort_key(x.name)):
+        if p.name in FIG_EXCLUDE:
+            continue
         items.append({
             "file": p.name,
+            "title": _figure_title(p.name),
             "size_kb": p.stat().st_size / 1024,
             "desc": FIG_DESC.get(p.name, ""),
         })
@@ -118,8 +155,8 @@ def _csv_card_html(item: dict) -> str:
 
 def _figure_card_html(item: dict) -> str:
     file = item["file"]
+    title = item["title"]
     desc = item["desc"]
-    title = file.replace(".png", "")
     desc_html = f'<p class="desc">{_esc(desc)}</p>' if desc else ""
     return (
         '      <div class="card figure-card">\n'
