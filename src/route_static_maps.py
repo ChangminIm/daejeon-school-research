@@ -22,6 +22,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
+import matplotlib.patheffects as patheffects
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
@@ -37,6 +38,7 @@ from src.static_maps import (
     GU_LABEL_POS_4326, COLOR_OP, COLOR_PLAN, COLOR_NOM,
     SLOPE_COLOR_STOPS, _gu_label_pos_3857, _draw_sigungu,
     _set_extent, _add_basemap, _footer, FIG_W, FIG_H, DPI, FOOTER,
+    LEGEND_LOWER_RIGHT, LEGEND_UPPER_RIGHT,
 )
 
 rcParams["font.family"] = "Malgun Gothic"
@@ -140,7 +142,7 @@ def figure_07_route_slope_profile(sigungu, routes_3857, routes_slope_df, schools
 
     _draw_sigungu(ax, sigungu)
 
-    # 노선 경사 5단계 범례 — figure 우측 외부
+    # 노선 경사 5단계 범례 — 우하단 (지도 안)
     legend_elems = [
         Patch(facecolor="#2D8B43", label="< 3°  (평지)"),
         Patch(facecolor="#91C266", label="3 ~ 6°"),
@@ -148,10 +150,8 @@ def figure_07_route_slope_profile(sigungu, routes_3857, routes_slope_df, schools
         Patch(facecolor="#B85C2A", label="9 ~ 12°"),
         Patch(facecolor="#8B1A1A", label="≥ 12°  (가파름)"),
     ]
-    ax.legend(handles=legend_elems, loc="center left",
-              bbox_to_anchor=(1.02, 0.7),
-              title="노선 평균 경사", title_fontsize=9.5,
-              fontsize=9.5, framealpha=0.95, facecolor="white")
+    ax.legend(handles=legend_elems, **LEGEND_LOWER_RIGHT,
+              title="노선 평균 경사", title_fontsize=9.5, fontsize=9.5)
 
     return _save(fig, "07_노선경사프로파일.png")
 
@@ -320,26 +320,126 @@ def figure_09_route_overlap(sigungu, routes_3857, schools_3857):
 
     _draw_sigungu(ax, sigungu)
 
-    # 범례 — figure 우측 외부
+    # 범례 — 우하단 (지도 안)
     from matplotlib.patches import Patch as _Patch
     legend_elems = [
         _Patch(facecolor="#C0392B", edgecolor="#8B0000", alpha=0.5,
-               label="노선 100m 버퍼\n중첩 영역"),
+               label="노선 100m 버퍼 중첩"),
         _Patch(facecolor="#FFE082", edgecolor="#E67E22", alpha=0.4,
                linestyle="--", label="공동활용 후보 권역"),
         Line2D([], [], color="#666", linewidth=1.5, alpha=0.7,
                label="통학차량 노선 (전체)"),
     ]
-    ax.legend(handles=legend_elems, loc="center left",
-              bbox_to_anchor=(1.02, 0.65), fontsize=9.5,
-              framealpha=0.95, facecolor="white")
+    ax.legend(handles=legend_elems, **LEGEND_LOWER_RIGHT, fontsize=9.5)
 
     return _save(fig, "09_노선중복_공동활용권역.png")
 
 
+def figure_09_zoom(region_label, schools_in_region, sigungu, routes_3857,
+                    routes_slope_df, stops_3857, schools_3857, out_name):
+    """공동활용 후보 권역 R1·R2 확대 지도.
+
+    region_label: "R1: 남선초·진잠초" 같은 제목 후반부
+    schools_in_region: list of short school names (e.g. ['남선초', '진잠초'])
+    """
+    import json as _json
+    from src.config import DATA_GEOJSON
+    from shapely.ops import unary_union
+
+    fig, ax = _setup(f"공동활용 후보 권역 {region_label}")
+
+    # 권역 학교들의 노선 union → bounding box + 1km 여유
+    region_routes = routes_3857[routes_3857["short"].isin(schools_in_region)]
+    if len(region_routes) == 0:
+        print(f"   [경고] {region_label} 노선 없음, 스킵")
+        return None
+    bbox_geom = unary_union(region_routes.geometry.tolist())
+    minx, miny, maxx, maxy = bbox_geom.bounds
+    pad = 1500  # 3857 미터 단위 약 1.5km 여유
+    ax.set_xlim(minx - pad, maxx + pad)
+    ax.set_ylim(miny - pad, maxy + pad)
+    ax.set_aspect("equal")
+
+    _add_basemap(ax, alpha=0.7)
+
+    # 자치구 경계 (해당 부분만)
+    sigungu.boundary.plot(ax=ax, color="#222", linewidth=0.7, alpha=0.6, zorder=10)
+
+    # 다른 학교들 노선은 옅게 (맥락 보조)
+    other_routes = routes_3857[~routes_3857["short"].isin(schools_in_region)]
+    other_routes.plot(ax=ax, color="#bbb", linewidth=1.0, alpha=0.45, zorder=2)
+
+    # 권역 학교 노선 — 학교별 색상
+    palette = {schools_in_region[0]: "#1976D2", schools_in_region[1]: "#E67E22"}
+    for school in schools_in_region:
+        sub = routes_3857[routes_3857["short"] == school]
+        sub.plot(ax=ax, color=palette[school], linewidth=2.5,
+                 alpha=0.85, zorder=5, label=f"{school} 노선")
+
+    # 중첩 영역 polygon
+    overlap_path = DATA_GEOJSON / "노선중첩영역.geojson"
+    if overlap_path.exists():
+        gdf_overlap = gpd.read_file(overlap_path).to_crs(CRS_3857)
+        # 권역 학교 쌍에 해당하는 polygon만 표시
+        s1, s2 = schools_in_region[0], schools_in_region[1]
+        mask = (((gdf_overlap["school_A"] == s1) & (gdf_overlap["school_B"] == s2))
+                | ((gdf_overlap["school_A"] == s2) & (gdf_overlap["school_B"] == s1)))
+        sub_overlap = gdf_overlap[mask]
+        if len(sub_overlap):
+            sub_overlap.plot(ax=ax, facecolor="#C0392B", alpha=0.45,
+                              edgecolor="#8B0000", linewidth=1.4, zorder=4)
+
+    # 정류장 (해당 학교 소속만)
+    if stops_3857 is not None:
+        stops_in = stops_3857[stops_3857["short"].isin(schools_in_region)]
+        ax.scatter(stops_in.geometry.x, stops_in.geometry.y,
+                   s=35, c="white", edgecolors="#1A237E", linewidths=1.5,
+                   zorder=6)
+
+    # 학교 마커 (운영 청록 P)
+    sch_in = schools_3857[schools_3857["학교명"].apply(
+        lambda n: any(s in str(n) for s in schools_in_region)
+    )]
+    ax.scatter(sch_in.geometry.x, sch_in.geometry.y, s=220, c=COLOR_OP,
+               marker="P", edgecolors="#0E6B5A", linewidths=1.5,
+               alpha=0.98, zorder=10)
+    # 학교명 라벨
+    for _, r in sch_in.iterrows():
+        txt = ax.text(
+            r.geometry.x, r.geometry.y - 250,
+            r["학교명"], fontsize=11, ha="center", va="top",
+            color="#222", fontweight="bold", zorder=11,
+        )
+        txt.set_path_effects([
+            patheffects.withStroke(linewidth=3, foreground="white")
+        ])
+
+    ax.set_axis_off()
+
+    # 범례 + 중첩률 박스 (우하단)
+    legend_elems = [
+        Line2D([], [], color=palette[schools_in_region[0]], linewidth=2.5,
+               label=f"{schools_in_region[0]} 노선"),
+        Line2D([], [], color=palette[schools_in_region[1]], linewidth=2.5,
+               label=f"{schools_in_region[1]} 노선"),
+        Patch(facecolor="#C0392B", edgecolor="#8B0000", alpha=0.5,
+              label="중첩 영역"),
+        Line2D([], [], marker="P", color="w", markerfacecolor=COLOR_OP,
+               markersize=14, markeredgecolor="#0E6B5A", label="학교"),
+        Line2D([], [], marker="o", color="w", markerfacecolor="white",
+               markersize=8, markeredgecolor="#1A237E", label="정류장"),
+    ]
+    ax.legend(handles=legend_elems, **LEGEND_LOWER_RIGHT, fontsize=9.5)
+
+    return _save(fig, out_name)
+
+
+# 패치: route_static_maps의 _setup도 부제 무시 (static_maps와 동일 정책)
+# 이미 위에서 정의된 _setup이 그대로 작동
+
 def main():
     print("=" * 72)
-    print("Phase 2 정적 도면 (07·08·09 — 09는 노선 중복 분석으로 교체)")
+    print("Phase 2 정적 도면 (07·08·09 + 09a·09b R1·R2 확대)")
     print("=" * 72)
 
     from src.route_slope import (
@@ -372,8 +472,20 @@ def main():
     print("\n  [skip] 도면 09 운영비 회귀 — 본 챕터(외부환경분석) 미반영,")
     print("         docs/운영비_회귀_시도_메모.md로 별도 보관")
 
-    print("\n[5] 도면 09 — 노선 중복 / 공동활용 후보 권역 (신규)")
+    print("\n[5] 도면 09 — 노선 중복 / 공동활용 후보 권역")
     figure_09_route_overlap(sigungu, routes_3857, schools_3857)
+
+    print("\n[6] 도면 09a·09b — R1·R2 권역 확대")
+    # 정류장도 3857로 로드
+    from src.route_slope import load_stops
+    stops_5179 = load_stops()
+    stops_3857 = stops_5179.to_crs(CRS_3857)
+    figure_09_zoom("R1: 남선초·진잠초", ["남선초", "진잠초"],
+                    sigungu, routes_3857, routes_slope_df,
+                    stops_3857, schools_3857, "09a_R1_확대.png")
+    figure_09_zoom("R2: 산내초·산흥초", ["산내초", "산흥초"],
+                    sigungu, routes_3857, routes_slope_df,
+                    stops_3857, schools_3857, "09b_R2_확대.png")
 
     print("\n" + "=" * 72)
     print("[DONE] 도면 3장 생성")

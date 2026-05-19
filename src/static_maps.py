@@ -23,6 +23,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
+import matplotlib.patheffects as patheffects
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, PathPatch
@@ -158,14 +159,25 @@ def _draw_sigungu(ax, sigungu, labels=True):
     if labels:
         pos_3857 = _gu_label_pos_3857()
         for name, (x, y) in pos_3857.items():
-            ax.annotate(
-                name,
-                xy=(x, y), fontsize=11, color="#222",
-                ha="center", va="center",
-                bbox=dict(boxstyle="square,pad=0.25", fc="white",
-                          ec="none", alpha=0.85),
-                zorder=20,
+            txt = ax.text(
+                x, y, name,
+                fontsize=11.5, color="#222", fontweight="bold",
+                ha="center", va="center", zorder=20,
             )
+            txt.set_path_effects([
+                patheffects.withStroke(linewidth=3.5, foreground="white")
+            ])
+
+
+# 범례 위치 표준 (지도 안)
+LEGEND_LOWER_RIGHT = dict(
+    loc="lower right", bbox_to_anchor=(0.98, 0.02),
+    framealpha=0.92, facecolor="white", edgecolor="gray",
+)
+LEGEND_UPPER_RIGHT = dict(
+    loc="upper right", bbox_to_anchor=(0.98, 0.98),
+    framealpha=0.92, facecolor="white", edgecolor="gray",
+)
 
 
 def _set_extent(ax, sigungu, pad_frac=0.05):
@@ -251,7 +263,7 @@ def _split_schools_by_state(schools_gdf):
 # ===== 도면 1: 종합지도 =====
 
 def figure_01_overview(sigungu, schools, redev, top30):
-    fig, ax = _setup("종합 분석 지도")
+    fig, ax = _setup("대전 학교·도시개발 분포 현황")
     _set_extent(ax, sigungu)
     _add_basemap(ax)
 
@@ -306,7 +318,7 @@ def figure_02_redev_with_kde(sigungu, redev):
     _set_extent(ax, sigungu)
     _add_basemap(ax)
 
-    # KDE — 세대수 가중
+    # KDE — 세대수 가중 (강조)
     valid_redev = redev[redev["세대수"].fillna(0) > 0].copy()
     if len(valid_redev) > 3:
         xy = np.array([(p.x, p.y) for p in valid_redev.geometry]).T
@@ -323,12 +335,12 @@ def figure_02_redev_with_kde(sigungu, redev):
         cmap_kde = LinearSegmentedColormap.from_list(
             "yor", [(0.0, "#FFF3B0"), (0.4, "#FFA34D"), (1.0, "#C0392B")]
         )
-        cs = ax.contourf(xx, yy, zz, levels=14, cmap=cmap_kde, alpha=0.6, zorder=2)
+        cs = ax.contourf(xx, yy, zz, levels=14, cmap=cmap_kde, alpha=0.75, zorder=2)
         clip_patch = _make_clip_patch(sigungu, ax)
         ax.add_patch(clip_patch)
         cs.set_clip_path(clip_patch)
 
-        cbar_ax = ax.inset_axes([0.68, 0.92, 0.27, 0.02])
+        cbar_ax = ax.inset_axes([0.68, 0.94, 0.27, 0.022])
         grad = np.linspace(0, 1, 256).reshape(1, -1)
         cbar_ax.imshow(grad, cmap=cmap_kde, aspect="auto")
         cbar_ax.set_xticks([0, 255])
@@ -336,13 +348,17 @@ def figure_02_redev_with_kde(sigungu, redev):
         cbar_ax.set_yticks([])
         cbar_ax.set_title("도시개발 압력 (세대수 가중)", fontsize=9, pad=2)
 
-    # 도시개발 사업 점 — 일률 단일 색 (진청), 작게
+    # 도시개발 사업 점 — 일률 단일 진청, 더 작게/흐리게 (KDE 강조)
     redev_active = redev[redev["통학영향_임박도"].isin(IMM_COLOR.keys())]
     ax.scatter(redev_active.geometry.x, redev_active.geometry.y,
-               s=25, c="#1A237E", alpha=0.7,
-               edgecolors="white", linewidths=0.4, zorder=6)
+               s=20, c="#1A237E", alpha=0.6,
+               edgecolors="white", linewidths=0.3, zorder=6,
+               label="● 재개발 사업 (진행)")
 
     _draw_sigungu(ax, sigungu)
+
+    # 점 범례 — 우하단
+    ax.legend(**LEGEND_LOWER_RIGHT, fontsize=10)
 
     return _save(fig, "02_재개발임박도.png")
 
@@ -395,67 +411,37 @@ def figure_03_top30(sigungu, schools, top30):
 
     _draw_sigungu(ax, sigungu)
 
-    # 정의 박스 (좌상단, 가독성 향상)
+    # 상위 학교 범례 — 우상단 (지도 안)
+    legend_elems = [
+        Line2D([], [], marker="*", color="w", markerfacecolor="#C0392B",
+               markersize=17, label="상위 1~5교"),
+        Line2D([], [], marker="*", color="w", markerfacecolor="#E67E22",
+               markersize=14, label="상위 6~15교"),
+        Line2D([], [], marker="*", color="w", markerfacecolor="#F1C40F",
+               markersize=12, label="상위 16~30교"),
+        Line2D([], [], marker="o", color="w", markerfacecolor="#bbb",
+               markersize=6, label="기타 학교"),
+    ]
+    ax.legend(handles=legend_elems, **LEGEND_UPPER_RIGHT,
+              fontsize=10, handletextpad=1.0, borderpad=0.8)
+
+    # 정의 박스 — 우하단 (범례와 분리)
     def_text = (
         "신규 검토 대상\n"
         "= 적격성 점수 상위 + 현행 미운영"
     )
-    ax.text(0.01, 0.99, def_text, transform=ax.transAxes,
-            fontsize=10.5, verticalalignment="top",
+    ax.text(0.98, 0.02, def_text, transform=ax.transAxes,
+            fontsize=10.5, ha="right", va="bottom",
             bbox=dict(boxstyle="round,pad=0.5", fc="white", ec="gray",
                       alpha=0.95, linewidth=0.8))
-
-    legend_elems = [
-        Line2D([], [], marker="*", color="w", markerfacecolor="#C0392B",
-               markersize=16, label="상위 1~5교"),
-        Line2D([], [], marker="*", color="w", markerfacecolor="#E67E22",
-               markersize=13, label="상위 6~15교"),
-        Line2D([], [], marker="*", color="w", markerfacecolor="#F1C40F",
-               markersize=11, label="상위 16~30교"),
-        Line2D([], [], marker="o", color="w", markerfacecolor="#bbb",
-               markersize=5, label="기타 학교"),
-    ]
-    ax.legend(handles=legend_elems, loc="lower left", fontsize=9.5, framealpha=0.92)
 
     return _save(fig, "03_적격성상위30교.png")
 
 
 # ===== 도면 4: 운영-검토 비교 (운영/예정/명목 색상 분리) =====
 
-def figure_04_compare(sigungu, schools, top30):
-    fig, ax = _setup("현행 운영 학교와 신규 검토 대상 비교")
-    _set_extent(ax, sigungu)
-    _add_basemap(ax)
-
-    top30_names = set(top30["학교명"])
-    op, pl, nm, others_state = _split_schools_by_state(schools)
-    bus_all_names = set(op["학교명"]) | set(pl["학교명"]) | set(nm["학교명"])
-
-    # 기타 학교 옅게
-    others = schools[~schools["학교명"].isin(top30_names | bus_all_names)]
-    ax.scatter(others.geometry.x, others.geometry.y, s=8, c="#ddd",
-               alpha=0.5, edgecolors="none", zorder=3)
-
-    # 신규 검토 30교
-    t30 = schools[schools["학교명"].isin(top30_names)]
-    ax.scatter(t30.geometry.x, t30.geometry.y, s=170, c="#F1C40F",
-               marker="*", edgecolors="#C0392B", linewidths=1.4,
-               alpha=0.95, zorder=5)
-
-    # 운영 분류 — 3색 유지 (도면 본 목적이 비교이므로)
-    ax.scatter(op.geometry.x, op.geometry.y, s=170, c=COLOR_OP,
-               marker="P", edgecolors="#0E6B5A", linewidths=1.3,
-               alpha=0.97, zorder=7)
-    ax.scatter(pl.geometry.x, pl.geometry.y, s=170, c=COLOR_PLAN,
-               marker="P", edgecolors="#9C6510", linewidths=1.3,
-               alpha=0.95, zorder=7)
-    ax.scatter(nm.geometry.x, nm.geometry.y, s=170, c=COLOR_NOM,
-               marker="P", edgecolors="#3A4143", linewidths=1.3,
-               alpha=0.9, zorder=7)
-
-    _draw_sigungu(ax, sigungu)
-
-    return _save(fig, "04_운영12vs상위30교.png")
+# figure_04_compare 제거됨 (04번 도면 보고서에서 제외, 사용자 결정)
+# 04 번호는 인용·문서 영향 회피를 위해 빈 슬롯으로 둠
 
 
 # ===== 도면 5: 경사도 음영 + 운영 학교 (범례 분리) =====
@@ -500,7 +486,7 @@ def figure_05_slope_with_operating(sigungu, schools, top30):
                marker="P", edgecolors="#3A4143", linewidths=1.2,
                alpha=0.9, zorder=7)
 
-    # 학교 분류 범례 — figure 우측 외부
+    # 학교 분류 범례 — 우상단 (지도 안)
     legend_elems = [
         Line2D([], [], marker="P", color="w", markerfacecolor=COLOR_OP,
                markersize=13, label="운영 12교"),
@@ -511,20 +497,17 @@ def figure_05_slope_with_operating(sigungu, schools, top30):
         Line2D([], [], marker="*", color="w", markerfacecolor="#F1C40F",
                markersize=14, markeredgecolor="#222", label="신규 검토 대상"),
     ]
-    ax.legend(handles=legend_elems, loc="center left",
-              bbox_to_anchor=(1.02, 0.7), fontsize=10,
-              framealpha=0.95, facecolor="white", edgecolor="#888")
+    ax.legend(handles=legend_elems, **LEGEND_UPPER_RIGHT, fontsize=10)
 
-    # 경사도 컬러바 — figure 우측 외부 별도 axes (하단)
+    # 경사도 컬러바 — 우하단 (지도 안, 가로 형태)
     cmap = LinearSegmentedColormap.from_list("slope", SLOPE_COLOR_STOPS)
-    cbar_ax = fig.add_axes([0.86, 0.18, 0.012, 0.28])
-    grad = np.linspace(0, 30, 256).reshape(-1, 1)[::-1]
-    cbar_ax.imshow(grad, cmap=cmap, aspect="auto", extent=[0, 1, 0, 30])
-    cbar_ax.set_xticks([])
-    cbar_ax.set_yticks([0, 7.5, 15, 22.5, 30])
-    cbar_ax.set_yticklabels(["0°", "7.5°", "15°", "22.5°", "30°+"], fontsize=8.5)
-    cbar_ax.yaxis.tick_right()
-    cbar_ax.set_title("경사도", fontsize=9, pad=4)
+    cbar_ax = ax.inset_axes([0.62, 0.05, 0.34, 0.022])
+    grad = np.linspace(0, 30, 256).reshape(1, -1)
+    cbar_ax.imshow(grad, cmap=cmap, aspect="auto", extent=[0, 30, 0, 1])
+    cbar_ax.set_yticks([])
+    cbar_ax.set_xticks([0, 7.5, 15, 22.5, 30])
+    cbar_ax.set_xticklabels(["0°", "7.5°", "15°", "22.5°", "30°+"], fontsize=8.5)
+    cbar_ax.set_title("경사도", fontsize=9, pad=2)
 
     return _save(fig, "05_경사도음영_운영학교.png")
 
@@ -577,7 +560,7 @@ def figure_06_kde_students(sigungu, schools, top30):
     cbar_ax.set_yticks([])
     cbar_ax.set_title("학생 분포 밀도 (가중 KDE)", fontsize=9, pad=2)
 
-    ax.legend(loc="lower left", fontsize=10, framealpha=0.92)
+    ax.legend(**LEGEND_LOWER_RIGHT, fontsize=10)
     return _save(fig, "06_KDE학생분포.png")
 
 
@@ -604,7 +587,7 @@ def main():
     figure_01_overview(sigungu, schools, redev, top30)
     figure_02_redev_with_kde(sigungu, redev)
     figure_03_top30(sigungu, schools, top30)
-    figure_04_compare(sigungu, schools, top30)
+    # 04: 제외 (보고서 비포함, 사용자 결정)
     figure_05_slope_with_operating(sigungu, schools, top30)
     figure_06_kde_students(sigungu, schools, top30)
 

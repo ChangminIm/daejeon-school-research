@@ -169,11 +169,11 @@ def _test_two_groups(a, b, label_a, label_b):
 def _plot_boxplot(groups, test_results):
     data = [groups["A"], groups["B"], groups["C_prime"], groups["E"], groups["D"]]
     labels = [
-        f"A 신규 아파트\n(공사중+관리처분)\nn={len(groups['A'])}",
-        f"B 진행 전체\n(1·2·3·4·5단계)\nn={len(groups['B'])}",
-        f"C' 학교\n(14교 제외)\nn={len(groups['C_prime'])}",
-        f"★ E 현행 14교 ★\n(통학버스 운영)\nn={len(groups['E'])}",
-        f"D 대전 영역\n(random 1000)\nn={len(groups['D'])}",
+        f"신규 아파트\nn={len(groups['A'])}",
+        f"재개발 전체\nn={len(groups['B'])}",
+        f"일반 학교\nn={len(groups['C_prime'])}",
+        f"현행 14교\nn={len(groups['E'])}",
+        f"대전 전역\nn={len(groups['D'])}",
     ]
     # 색상: A 빨강 / B 주황 / C' 파랑(중간톤) / E 진네이비(강조) / D 회색
     colors = ["#D32F2F", "#F57C00", "#1976D2", "#0D47A1", "#9E9E9E"]
