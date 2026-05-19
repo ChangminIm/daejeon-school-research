@@ -128,6 +128,20 @@ BUS_PLANNED_1_SHORT = ["흥도초"]
 BUS_NOMINAL_1_SHORT = ["신탄진용정초"]
 BUS_ALL_14_SHORT = BUS_OPERATING_12_SHORT + BUS_PLANNED_1_SHORT + BUS_NOMINAL_1_SHORT
 
+# ===== 외부 SHP 경로 (통학차량 노선/정류장) =====
+# 데이터 갱신 시 이 두 상수만 바꾸면 됨
+ROUTES_SHP = (
+    r"D:\04_제안서\03_기타\대전광역시\데이터"
+    r"\대전광역시 통학차량_노선도_re"
+    r"\대전광역시 통학차량_노선도_re.shp"
+)
+STOPS_SHP = (
+    r"D:\04_제안서\03_기타\대전광역시\데이터"
+    r"\대전광역시 통학차량 운행 노선(260519)"
+    r"\1.대전광역시 통학차량 전체 노선(260519)"
+    r"\대전광역시 통학차량_탑승장소.shp"
+)
+
 # ===== API 키 =====
 VWORLD_API_KEY = os.environ.get("VWORLD_API_KEY")
 VWORLD_GEOCODE_URL = "https://api.vworld.kr/req/address"
