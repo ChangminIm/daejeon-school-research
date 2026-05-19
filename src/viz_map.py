@@ -758,6 +758,43 @@ def add_kde_layers(m):
     return [fg_kde_students, fg_kde_redev], [heatmap_students, heatmap_redev]
 
 
+# ===== 경사도 음영 ImageOverlay =====
+def add_slope_overlay(m):
+    """대전 경사도 음영 ImageOverlay (4326 PNG, base64 임베드).
+
+    src/slope_overlay.py가 미리 생성한 PNG + bounds JSON 사용.
+    base64로 임베드해 단일 HTML 자족 (GitHub Pages 호환).
+    """
+    import base64
+    import json
+
+    png_path = DATA_PROCESSED / "대전_slope_overlay.png"
+    bounds_path = DATA_PROCESSED / "대전_slope_overlay_bounds.json"
+
+    if not png_path.exists() or not bounds_path.exists():
+        print("   ⚠️ slope_overlay PNG/bounds 없음. 'python -m src.slope_overlay' 먼저 실행.")
+        return None
+
+    b = json.loads(bounds_path.read_text(encoding="utf-8"))
+    png_bytes = png_path.read_bytes()
+    b64 = base64.b64encode(png_bytes).decode("ascii")
+    data_uri = f"data:image/png;base64,{b64}"
+
+    fg = folium.FeatureGroup(
+        name="🏔️ 경사도 음영", overlay=True, show=False
+    )
+    folium.raster_layers.ImageOverlay(
+        image=data_uri,
+        bounds=[[b["south"], b["west"]], [b["north"], b["east"]]],
+        opacity=1.0,         # PNG 자체 alpha 활용
+        interactive=False,
+        cross_origin=False,
+        zindex=400,          # 베이스 위, 마커 아래
+    ).add_to(fg)
+    m.add_child(fg)
+    return fg
+
+
 # ===== 제목 박스 =====
 def add_title_box(m, schools_df, projects=None):
     """제목 박스. 사업 건수는 동적으로 '진행 N건' 표기."""
@@ -819,6 +856,13 @@ def add_legend(m):
           <span style="color:#777;font-size:11px;">영향권: 1km 채움 / 1.5km 점선</span>
         </div>
       </details>
+      <details class="legend-section">
+        <summary>📍 베이스 (옵션)</summary>
+        <div class="legend-body" style="font-size:10px;line-height:1.55;">
+          <span style="display:inline-block;width:60px;height:8px;vertical-align:middle;margin-right:6px;background:linear-gradient(to right,#2D8B43,#91C266,#D4B36A,#B85C2A,#8B1A1A);"></span>
+          🏔️ 경사도 음영 (옵션): 녹색=평지 → 갈색=중 → 빨강=20°+
+        </div>
+      </details>
     </div>
     """
     m.get_root().html.add_child(folium.Element(legend))
@@ -865,6 +909,7 @@ def build_map(schools_df, output_filename="대전_외부환경분석_도시개�
     elig_fgs = add_eligibility_top30(m, schools_df=schools_df)
     bus_fgs = add_current_bus14(m, schools_df)
     kde_fgs, kde_heatmaps = add_kde_layers(m)
+    fg_slope_overlay = add_slope_overlay(m)
 
     if include_tram:
         try:
@@ -880,6 +925,7 @@ def build_map(schools_df, output_filename="대전_외부환경분석_도시개�
         elig_fgs=elig_fgs, bus_fgs=bus_fgs, integ_fgs=integ_fgs,
         dev_fgs=dev_fgs, redev_by_key=redev_by_key,
         kde_fgs=kde_fgs, kde_heatmaps=kde_heatmaps,
+        slope_overlay_fg=fg_slope_overlay,
         schools_df=schools_df,
     )
 
@@ -902,7 +948,7 @@ def build_map(schools_df, output_filename="대전_외부환경분석_도시개�
 def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
                        elig_fgs, bus_fgs, integ_fgs, dev_fgs,
                        redev_by_key, schools_df, kde_fgs=None,
-                       kde_heatmaps=None):
+                       kde_heatmaps=None, slope_overlay_fg=None):
     """커스텀 HTML+CSS+JS 레이어 패널 + window 노출 + 초기 ON/OFF 정렬."""
     fg_sigungu = admin_fgs[0] if len(admin_fgs) > 0 else None
     fg_dong = admin_fgs[1] if len(admin_fgs) > 1 else None
@@ -919,6 +965,7 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
     fg_ipan = redev_by_key.get("입안")
     fg_kde_students = kde_fgs[0] if kde_fgs and len(kde_fgs) > 0 else None
     fg_kde_redev = kde_fgs[1] if kde_fgs and len(kde_fgs) > 1 else None
+    fg_slope = slope_overlay_fg
     hm_students = kde_heatmaps[0] if kde_heatmaps and len(kde_heatmaps) > 0 else None
     hm_redev = kde_heatmaps[1] if kde_heatmaps and len(kde_heatmaps) > 1 else None
     hm_students_v = hm_students.get_name() if hm_students else None
@@ -954,7 +1001,7 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
         n(fg) for fg in [fg_sigungu, fg_dong, fg_elem, fg_mid,
                           fg_elig, fg_bus14, fg_integ, fg_dev,
                           fg_gongsa, fg_gwanli, fg_siheng, fg_johap, fg_ipan,
-                          fg_kde_students, fg_kde_redev]
+                          fg_kde_students, fg_kde_redev, fg_slope]
         if fg is not None
     ]
     hm_names = [v for v in [hm_students_v, hm_redev_v] if v]
@@ -997,6 +1044,14 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
         if fg: off_layers.append(n(fg))
     if fg_kde_students: off_layers.append(n(fg_kde_students))
     if fg_kde_redev: off_layers.append(n(fg_kde_redev))
+    if fg_slope: off_layers.append(n(fg_slope))
+
+    # 베이스 그룹 내 경사도 음영 체크박스 (fg_slope가 있을 때만)
+    slope_chk_html = (
+        f'<label><input type="checkbox" onchange="lpLayer(this,\'{n(fg_slope)}\')"> '
+        f'🏔️ 경사도 (음영)</label>'
+        if fg_slope is not None else ''
+    )
 
     panel_html = f"""
 <div id="layer-panel">
@@ -1005,6 +1060,7 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
     <div class="lp-body">
       <label><input type="checkbox" checked onchange="lpLayer(this,'{n(fg_sigungu)}')"> 시군구 경계</label>
       <label><input type="checkbox" onchange="lpLayer(this,'{n(fg_dong)}')"> 행정동 경계</label>
+      {slope_chk_html}
       <div class="lp-bg">배경:
         <label><input type="radio" name="bg" checked onchange="lpBg('osm')"> OSM</label>
         <label><input type="radio" name="bg" onchange="lpBg('gray')"> Gray</label>
