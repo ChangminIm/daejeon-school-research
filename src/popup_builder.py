@@ -229,10 +229,19 @@ def build_school_popup(school_row, ctx):
     # [영향사업] — details 블록 (≤5건 펼침/≥6건 접힘)
     impact = _build_impact_block(pri.get("영향사업목록", ""), level, proj_lookup)
 
-    # [현행 통학차량]
+    # [현행 통학차량] + 노선 통계 (운영 12교 기준)
+    bus_html = _build_bus_row(bus)
+    route_info = ctx.get("route_lookup", {}).get(name)
+    if route_info:
+        bus_html += (
+            f'<div style="font-size:11.5px;margin-top:4px;color:#1A237E;">'
+            f'🛣️ 노선 평균 경사: <b>{route_info["avg_slope"]:.1f}°</b> '
+            f'(노선 {route_info["n"]}건, 총 길이 {route_info["total_length_km"]:.1f} km)'
+            f'</div>'
+        )
     bus_section = (
         f'<div class="sp-section">🚌 현행 통학차량</div>'
-        f'{_build_bus_row(bus)}'
+        f'{bus_html}'
     )
 
     return (
@@ -289,10 +298,39 @@ def build_popup_context(schools_df):
         if "학교명" in sdf.columns and "slope_300m_mean" in sdf.columns:
             slope_lookup = dict(zip(sdf["학교명"], sdf["slope_300m_mean"]))
 
+    # route_lookup: 운영 12교의 노선 통계 (정식 학교명 → {avg_slope, n, total_length_km})
+    route_lookup = {}
+    route_csv = DATA_PROCESSED / "schools_route_slope_summary.csv"
+    if route_csv.exists() and bus_csv.exists():
+        rdf = pd.read_csv(route_csv, encoding="utf-8-sig")
+        # 약식 학교명 → bus_matched의 정식 학교명 매핑
+        try:
+            short_to_full = {}
+            for _, r in matched.iterrows():
+                # bus CSV의 "학교명"(약식)을 정식 학교명에 매핑
+                short_to_full[r["학교명"]] = r["정식학교명"]
+        except Exception:
+            short_to_full = {}
+        for _, r in rdf.iterrows():
+            short = r["school_short"]
+            full = short_to_full.get(short)
+            # 기성초 본/분교 분리는 short_to_full에서 약식 1개에 정식 1개만 매핑됨
+            # → bus_lookup 전체를 다시 보고 약식 매칭되는 모든 정식 학교명 처리
+            full_names = [r2["정식학교명"] for _, r2 in matched.iterrows()
+                          if r2["학교명"] == short]
+            payload = {
+                "avg_slope": float(r["route_avg_slope"]),
+                "n": int(r["route_n"]),
+                "total_length_km": float(r["route_total_length_m"]) / 1000.0,
+            }
+            for fn in full_names:
+                route_lookup[fn] = payload
+
     return {
         "priority_lookup": pri_lookup,
         "bus_lookup": bus_lookup,
         "project_lookup": project_lookup,
         "slope_lookup": slope_lookup,
+        "route_lookup": route_lookup,
         "total_schools": len(schools_df),
     }
