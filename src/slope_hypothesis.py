@@ -200,8 +200,8 @@ def _plot_boxplot(groups, test_results):
             patch.set_alpha(0.7)
 
     ax.set_ylabel("경사도 (°)", fontsize=12)
-    ax.set_title("현행 통학차량 운영 학교의 경사도 분포 — 점수 산식의 사후 검증",
-                 fontsize=13, fontweight="bold")
+    ax.set_title("통학차량 운영 학교의 경사도 분포",
+                 fontsize=16, fontweight="bold", pad=12)
     ax.grid(axis="y", alpha=0.3, linestyle="--")
     ax.set_ylim(bottom=0)
 
@@ -211,26 +211,9 @@ def _plot_boxplot(groups, test_results):
             ax.text(i, arr.max() * 0.95 + 1, f"μ={np.mean(arr):.1f}°",
                     ha="center", fontsize=9, color="#333")
 
-    # 캡션: 사후 검증 (E vs C') + 가설 검정 (A vs C) 두 줄
-    p_ec = test_results["E_vs_Cprime"]["p_mwu"]
-    p_ac = test_results["A_vs_C"]["p_mwu"]
-    e_mean = float(np.mean(groups["E"])) if len(groups["E"]) else 0
-    cp_mean = float(np.mean(groups["C_prime"])) if len(groups["C_prime"]) else 0
+    # 캡션·통계 수치 삭제 (일괄 정책) — 박스 위 μ 표시는 유지
 
-    p_ec_str = "<0.0001" if p_ec < 0.0001 else f"={p_ec:.4f}"
-    cap_top = (
-        f"Mann-Whitney U  |  E vs C': p{p_ec_str}"
-        f"{' ★' if p_ec < 0.05 else ''}"
-        f"   |   A vs C: p={p_ac:.4f} (가설 기각)"
-    )
-    cap_bottom = (
-        f"현행 14교(E)는 평균 경사 {e_mean:.1f}°로 나머지 학교(C', {cp_mean:.1f}°)의 약 2배. "
-        f"Mann-Whitney p<0.0001 → 통학지원이 산악 외곽 학교에 집중되어 있음을 데이터로 확인"
-    )
-    fig.text(0.5, 0.04, cap_top, ha="center", fontsize=10.5, style="italic", color="#333")
-    fig.text(0.5, 0.005, cap_bottom, ha="center", fontsize=10, color="#0D47A1", fontweight="bold")
-
-    fig.tight_layout(rect=(0, 0.08, 1, 1))
+    fig.tight_layout()
     OUT_PNG.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT_PNG, dpi=300, bbox_inches="tight")
     plt.close(fig)

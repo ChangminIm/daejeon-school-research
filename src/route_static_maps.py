@@ -60,20 +60,17 @@ def _png_extent_3857():
 
 
 def _setup(title, subtitle=""):
+    """제목만, 부제는 무시 (일괄 정책)."""
     fig, ax = plt.subplots(figsize=(FIG_W, FIG_H), dpi=DPI)
     ax.set_aspect("equal")
     ax.set_axis_off()
-    if subtitle:
-        fig.suptitle(title, fontsize=15, fontweight="bold", y=0.96)
-        fig.text(0.5, 0.915, subtitle, ha="center", fontsize=10.5, color="#555")
-    else:
-        ax.set_title(title, fontsize=15, fontweight="bold", pad=10)
+    ax.set_title(title, fontsize=16, fontweight="bold", pad=12)
     return fig, ax
 
 
 def _save(fig, name):
     out = OUTPUT_FIGURES / name
-    fig.tight_layout(rect=(0, 0.025, 1, 0.96))
+    fig.tight_layout()
     fig.savefig(out, dpi=DPI, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     size_kb = out.stat().st_size / 1024
@@ -95,10 +92,7 @@ def _route_color_for_slope_static(slope):
 
 
 def figure_07_route_slope_profile(sigungu, routes_3857, routes_slope_df, schools_3857=None):
-    fig, ax = _setup(
-        "통학차량 노선 경사 프로파일",
-        "운영 12교 + 명목 1교 노선 (183개) — 평균 경사 5단계 색상, 인터랙티브 맵과 일관"
-    )
+    fig, ax = _setup("통학차량 노선 경사 프로파일")
     _set_extent(ax, sigungu)
     _add_basemap(ax, alpha=0.6)
 
@@ -146,7 +140,7 @@ def figure_07_route_slope_profile(sigungu, routes_3857, routes_slope_df, schools
 
     _draw_sigungu(ax, sigungu)
 
-    # 노선 경사 5단계 범례 (우상단, 흰 박스)
+    # 노선 경사 5단계 범례 — figure 우측 외부
     legend_elems = [
         Patch(facecolor="#2D8B43", label="< 3°  (평지)"),
         Patch(facecolor="#91C266", label="3 ~ 6°"),
@@ -154,29 +148,11 @@ def figure_07_route_slope_profile(sigungu, routes_3857, routes_slope_df, schools
         Patch(facecolor="#B85C2A", label="9 ~ 12°"),
         Patch(facecolor="#8B1A1A", label="≥ 12°  (가파름)"),
     ]
-    leg1 = ax.legend(handles=legend_elems, loc="upper right",
-                     title="노선 평균 경사", title_fontsize=9.5,
-                     fontsize=9, framealpha=0.95)
-    ax.add_artist(leg1)
+    ax.legend(handles=legend_elems, loc="center left",
+              bbox_to_anchor=(1.02, 0.7),
+              title="노선 평균 경사", title_fontsize=9.5,
+              fontsize=9.5, framealpha=0.95, facecolor="white")
 
-    # 학교 분류 범례 (좌하단)
-    if schools_3857 is not None:
-        ax.legend(loc="lower left", fontsize=9.5, framealpha=0.92, title="운영 학교",
-                  title_fontsize=10)
-
-    # 굵기 범례 (좌상단)
-    legend_text = "노선 굵기 ∝ 10° 이상 구간 비율"
-    ax.text(0.02, 0.97, legend_text, transform=ax.transAxes,
-            fontsize=9, verticalalignment="top",
-            bbox=dict(boxstyle="round,pad=0.35", fc="white", ec="#888",
-                      alpha=0.92, linewidth=0.5))
-
-    cap = ("운영 12교 노선 평균 4.4°, 학교 위치 평균 8.5°. "
-           "도로가 우회 경로 활용 (Wilcoxon p = 0.007)")
-    fig.text(0.5, 0.04, cap, ha="center", fontsize=10.5,
-             color="#0D47A1", fontweight="bold")
-
-    _footer(fig, "통학차량 노선 경사 프로파일")
     return _save(fig, "07_노선경사프로파일.png")
 
 
@@ -208,20 +184,13 @@ def figure_08_compare_bars(schools_sum, cmp_df):
     ax.set_xticks(x)
     ax.set_xticklabels(d["school_short"], rotation=22, ha="right", fontsize=10)
     ax.set_ylabel("경사도 (°)", fontsize=11.5)
-    ax.set_title("학교 위치 경사 vs 통학버스 노선 평균 경사 (운영 12교 + 명목 1교)",
-                  fontsize=14, fontweight="bold", pad=10)
+    ax.set_title("학교 위치 경사 vs 통학차량 노선 평균 경사",
+                  fontsize=16, fontweight="bold", pad=12)
     ax.legend(loc="upper right", fontsize=11, framealpha=0.95)
     ax.grid(axis="y", linestyle="--", alpha=0.3)
     ax.set_ylim(0, max(d["position_slope"].max(), d["route_avg_slope"].max()) * 1.18)
 
-    # 캡션
-    diff = (d["route_avg_slope"] - d["position_slope"]).mean()
-    cap = (f"평균 차이 = 노선 − 위치 = {diff:+.2f}°  ·  "
-           f"Wilcoxon signed-rank p = 0.007 → 노선이 위치보다 통계적으로 더 평탄")
-    fig.text(0.5, 0.015, cap, ha="center", fontsize=10.5,
-             color="#0D47A1", fontweight="bold")
-
-    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    fig.tight_layout()
     out = OUTPUT_FIGURES / "08_노선vs학교위치_경사비교.png"
     fig.savefig(out, dpi=DPI, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -295,10 +264,7 @@ def figure_09_route_overlap(sigungu, routes_3857, schools_3857):
     region_path = DATA_GEOJSON / "공동활용_권역_polygon.geojson"
     regions_csv = OUTPUT_TABLES / "공동활용_후보권역.csv"
 
-    fig, ax = _setup(
-        "통학차량 노선 중복 — 공동활용 후보 권역",
-        "운영 12교 + 명목 1교 노선 중첩 영역 식별 (100m 버퍼 ∩, 중첩률 ≥ 20% 권역)"
-    )
+    fig, ax = _setup("통학차량 노선 중복 — 공동활용 후보 권역")
     _set_extent(ax, sigungu)
     _add_basemap(ax, alpha=0.55)
 
@@ -354,39 +320,20 @@ def figure_09_route_overlap(sigungu, routes_3857, schools_3857):
 
     _draw_sigungu(ax, sigungu)
 
-    # 캡션
-    n_regions = 0
-    region_summary = ""
-    if regions_csv.exists():
-        rdf = pd.read_csv(regions_csv, encoding="utf-8-sig")
-        n_regions = len(rdf)
-        if n_regions > 0:
-            parts = [f"{r['권역']} {r['포함학교']} (중첩 {r['권역중첩률평균_max']*100:.0f}%)"
-                     for _, r in rdf.iterrows()]
-            region_summary = "  ·  ".join(parts)
-
-    if n_regions > 0:
-        cap = (f"공동활용 가능 권역 {n_regions}개 식별 — {region_summary}. "
-               f"통학차량 운영 효율화의 공간적 근거")
-    else:
-        cap = "분석 결과 중첩률 20% 이상 학교 쌍 없음 — 노선이 공간적으로 분리되어 공동활용 즉시 가능 권역 부재"
-    fig.text(0.5, 0.04, cap, ha="center", fontsize=10,
-             color="#C0392B", fontweight="bold")
-
-    # 범례
+    # 범례 — figure 우측 외부
     from matplotlib.patches import Patch as _Patch
     legend_elems = [
         _Patch(facecolor="#C0392B", edgecolor="#8B0000", alpha=0.5,
-               label="노선 100m 버퍼 중첩 영역"),
+               label="노선 100m 버퍼\n중첩 영역"),
         _Patch(facecolor="#FFE082", edgecolor="#E67E22", alpha=0.4,
                linestyle="--", label="공동활용 후보 권역"),
         Line2D([], [], color="#666", linewidth=1.5, alpha=0.7,
-               label="통학버스 노선 (전체)"),
+               label="통학차량 노선 (전체)"),
     ]
-    ax.legend(handles=legend_elems, loc="upper right", fontsize=9.5,
-              framealpha=0.95)
+    ax.legend(handles=legend_elems, loc="center left",
+              bbox_to_anchor=(1.02, 0.65), fontsize=9.5,
+              framealpha=0.95, facecolor="white")
 
-    _footer(fig, "통학차량 노선 중복 — 공동활용 후보 권역")
     return _save(fig, "09_노선중복_공동활용권역.png")
 
 
