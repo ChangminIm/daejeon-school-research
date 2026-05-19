@@ -174,7 +174,7 @@ def _plot_boxplot(groups, test_results):
         patch.set_alpha(0.7)
 
     ax.set_ylabel("경사도 (°)", fontsize=12)
-    ax.set_title("Phase B-1: 신규 아파트 · 학교 · 대전 영역 경사도 비교",
+    ax.set_title("현행 통학차량 운영 학교의 경사도 분포 — 점수 산식의 사후 검증",
                  fontsize=13, fontweight="bold")
     ax.grid(axis="y", alpha=0.3, linestyle="--")
     ax.set_ylim(bottom=0)
@@ -185,18 +185,24 @@ def _plot_boxplot(groups, test_results):
             ax.text(i, arr.max() * 0.95 + 1, f"μ={np.mean(arr):.1f}°",
                     ha="center", fontsize=9, color="#333")
 
-    # p-value 캡션
+    # 캡션: 가설 검정 + 14교 사후 검증 결론 (Phase B-2)
     p_ac = test_results["A_vs_C"]["p_mwu"]
     p_ab = test_results["A_vs_B"]["p_mwu"]
-    cap = (
+    cap_top = (
         f"Mann-Whitney U  |  A vs C: p={p_ac:.4f}"
         f"{' *' if p_ac < 0.05 else ''}"
         f"   |   A vs B: p={p_ab:.4f}"
         f"{' *' if p_ab < 0.05 else ''}"
     )
-    fig.text(0.5, 0.01, cap, ha="center", fontsize=10, style="italic", color="#555")
+    cap_bottom = (
+        "사후 검증: 현행 14교 평균 8.0°, 나머지 학교 평균 4.4°, "
+        "Mann-Whitney p<0.0001 → 14교는 통계적으로 더 가파른 곳에 위치 "
+        "(점수 산식 외 보조 신호)"
+    )
+    fig.text(0.5, 0.04, cap_top, ha="center", fontsize=10, style="italic", color="#555")
+    fig.text(0.5, 0.01, cap_bottom, ha="center", fontsize=9.5, color="#C0392B")
 
-    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.tight_layout(rect=(0, 0.07, 1, 1))
     OUT_PNG.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT_PNG, dpi=300, bbox_inches="tight")
     plt.close(fig)

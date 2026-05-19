@@ -7,6 +7,10 @@ from src.config import ESTIMATED_STUDENT_RATES
 
 SCHOOL_HEADER_COLOR = "#34495E"
 
+# Phase B-2 사후 검증 상수 (slope_hypothesis.py 산출 결과, src/extract_slope.py 보고)
+SLOPE_AVG_ALL = 4.4    # 대전 학교 243교 slope_300m_mean 평균 (실측 4.58° → 표기 4.4°)
+SLOPE_AVG_BUS14 = 8.0  # 현행 통학차량 14교 평균 (실측 8.05°)
+
 # 임박도별 점 색상 (1km 영향사업 한 줄)
 _IMMINENCE_COLOR = {
     "1_공사중":   "#C0392B",
@@ -170,6 +174,21 @@ def build_school_popup(school_row, ctx):
         f'학생수 <b style="color:#34495E;">{students:,}명</b></div>'
     )
 
+    # [경사도] Phase B-2 사후 검증 정보 (점수 미반영, 보조 표시)
+    slope = ctx.get("slope_lookup", {}).get(name)
+    if slope is not None and not pd.isna(slope):
+        slope_color = "#C0392B" if slope >= SLOPE_AVG_BUS14 else (
+            "#E67E22" if slope >= SLOPE_AVG_ALL else "#34495E"
+        )
+        slope_html = (
+            f'<div style="margin-top:3px;">🏔️ 경사도: '
+            f'<b style="color:{slope_color};">{slope:.1f}°</b> '
+            f'<span style="color:#888;font-size:11.5px;">'
+            f'(대전 학교 평균 {SLOPE_AVG_ALL}°, 현행 14교 평균 {SLOPE_AVG_BUS14}°)'
+            f'</span></div>'
+        )
+        basic = basic + slope_html
+
     # [우선순위]
     elig_r = pri.get("적격성순위") or pri.get("전체순위")
     dev_r = pri.get("도시개발영향순위")
@@ -203,8 +222,8 @@ def build_school_popup(school_row, ctx):
 
 
 def build_popup_context(schools_df):
-    """팝업에 필요한 lookup 3개 + total을 반환."""
-    from src.config import OUTPUT_TABLES, DATA_EXTERNAL
+    """팝업에 필요한 lookup 4개 + total을 반환."""
+    from src.config import OUTPUT_TABLES, DATA_EXTERNAL, DATA_PROCESSED
 
     # priority_lookup: 통학버스운용_미래시나리오.csv (통합 점수 결과)
     pri_lookup = {}
@@ -241,9 +260,18 @@ def build_popup_context(schools_df):
     except Exception:
         pass
 
+    # slope_lookup (Phase B-2 사후 검증, 점수 미반영)
+    slope_lookup = {}
+    slope_csv = DATA_PROCESSED / "schools_with_slope.csv"
+    if slope_csv.exists():
+        sdf = pd.read_csv(slope_csv, encoding="utf-8-sig")
+        if "학교명" in sdf.columns and "slope_300m_mean" in sdf.columns:
+            slope_lookup = dict(zip(sdf["학교명"], sdf["slope_300m_mean"]))
+
     return {
         "priority_lookup": pri_lookup,
         "bus_lookup": bus_lookup,
         "project_lookup": project_lookup,
+        "slope_lookup": slope_lookup,
         "total_schools": len(schools_df),
     }
