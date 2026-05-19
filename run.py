@@ -10,6 +10,7 @@
 from src import (
     parse_schools, geocode, geocode_redev, analysis,
     priority_analysis, tonghak_eligibility, integrated_priority, viz_map,
+    build_index,
 )
 from src.config import DATA_PROCESSED, OUTPUT_TABLES, OUTPUT_MAPS, DATA_EXTERNAL
 import pandas as pd
@@ -91,6 +92,10 @@ def main():
     print("\n[7/7] Folium 인터랙티브 맵 생성...")
     map_path = viz_map.build_map(schools_with_impact, include_tram=False)
     print(f"   ✅ 맵 저장: {map_path}")
+
+    # 8. GitHub Pages 랜딩 (outputs/tables, outputs/figures 글로빙)
+    print("\n[+] GitHub Pages 랜딩 index.html 갱신...")
+    build_index.main()
 
     # 점수 신뢰도 검증
     _print_reliability(integ_df)

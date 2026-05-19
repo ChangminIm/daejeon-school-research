@@ -4,10 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>대전광역시교육청 통학 지원 운영 방안 연구</title>
-<meta name="description" content="GIS 기반 통학환경 종합 분석 플랫폼 — 대전 초·중학교 245교, 도시정비사업 120건, 트램 14개 공구 분석.">
+<meta name="description" content="GIS 기반 통학환경 종합 분석 플랫폼 — 대전 초·중학교 243교, 도시정비사업 120건, 트램 14개 공구 분석.">
 <meta property="og:title" content="대전광역시교육청 통학 지원 운영 방안 연구">
-<meta property="og:description" content="GIS 기반 통학환경 종합 분석 플랫폼 — 대전 초·중학교 245교, 도시정비사업 120건 분석.">
+<meta property="og:description" content="GIS 기반 통학환경 종합 분석 플랫폼 — 대전 초·중학교 243교, 도시정비사업 120건 분석.">
 <meta property="og:type" content="website">
+<!-- 이 파일은 src/build_index.py 로 생성됩니다. 직접 수정하지 마세요. -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" as="style" crossorigin
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -37,7 +38,6 @@
   }
   a { color: var(--primary); text-decoration: none; }
   a:hover { text-decoration: underline; }
-
   .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
   header.hero {
@@ -51,16 +51,10 @@
     font-weight: 800;
     letter-spacing: -0.02em;
   }
-  header.hero p.subtitle {
-    margin: 0;
-    font-size: 1.02rem;
-    opacity: 0.92;
-  }
+  header.hero p.subtitle { margin: 0; font-size: 1.02rem; opacity: 0.92; }
   header.hero p.meta {
     margin: 14px 0 0;
-    font-size: 0.78rem;
-    opacity: 0.85;
-    line-height: 1.6;
+    font-size: 0.78rem; opacity: 0.85; line-height: 1.6;
   }
   header.hero .tag {
     display: inline-block;
@@ -74,27 +68,15 @@
     letter-spacing: 0.02em;
   }
 
-  section {
-    padding: 44px 0;
-  }
+  section { padding: 44px 0; }
   section h2 {
-    font-size: 1.35rem;
-    font-weight: 700;
+    font-size: 1.35rem; font-weight: 700;
     margin: 0 0 18px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    display: flex; align-items: center; gap: 8px;
     letter-spacing: -0.01em;
   }
-  section h2 .num {
-    color: var(--primary);
-    font-feature-settings: "tnum";
-  }
-  section h2 .count {
-    font-size: 0.85rem;
-    color: var(--muted);
-    font-weight: 500;
-  }
+  section h2 .num { color: var(--primary); font-feature-settings: "tnum"; }
+  section h2 .count { font-size: 0.85rem; color: var(--muted); font-weight: 500; }
 
   .stat-grid {
     display: grid;
@@ -122,36 +104,16 @@
     transition: box-shadow 0.2s, transform 0.2s;
     margin-bottom: 36px;
   }
-  .main-map-card:hover {
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-2px);
-  }
-  .main-map-card a {
-    display: block;
-    padding: 28px;
-    color: inherit;
-    text-decoration: none;
-  }
-  .main-map-card .icon {
-    font-size: 2rem;
-    margin-bottom: 8px;
-  }
-  .main-map-card h3 {
-    margin: 0 0 6px;
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text);
-  }
+  .main-map-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .main-map-card a { display: block; padding: 28px; color: inherit; text-decoration: none; }
+  .main-map-card .icon { font-size: 2rem; margin-bottom: 8px; }
+  .main-map-card h3 { margin: 0 0 6px; font-size: 1.2rem; font-weight: 700; color: var(--text); }
   .main-map-card p { margin: 0; color: var(--muted); font-size: 0.95rem; }
   .main-map-card .cta {
     display: inline-block;
-    margin-top: 14px;
-    padding: 8px 16px;
-    background: var(--primary);
-    color: white;
-    border-radius: 8px;
-    font-size: 0.88rem;
-    font-weight: 600;
+    margin-top: 14px; padding: 8px 16px;
+    background: var(--primary); color: white;
+    border-radius: 8px; font-size: 0.88rem; font-weight: 600;
   }
 
   .card-grid {
@@ -168,57 +130,52 @@
     display: flex; flex-direction: column; gap: 6px;
     transition: box-shadow 0.18s, transform 0.18s, border-color 0.18s;
   }
-  .card:hover {
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-2px);
-    border-color: #d4dcef;
-  }
+  .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); border-color: #d4dcef; }
   .card .icon { font-size: 1.4rem; }
   .card h4 {
-    margin: 0;
-    font-size: 0.98rem;
-    font-weight: 600;
-    color: var(--text);
+    margin: 0; font-size: 0.98rem; font-weight: 600; color: var(--text);
     word-break: keep-all;
   }
-  .card .desc {
-    color: var(--muted);
-    font-size: 0.83rem;
-    flex: 1;
-  }
+  .card .meta-line { font-size: 0.78rem; color: var(--muted); }
+  .card .desc { color: var(--muted); font-size: 0.83rem; flex: 1; margin: 4px 0 0; }
   .card .download {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 8px;
-    padding: 6px 12px;
-    background: var(--primary-light);
-    color: var(--primary);
-    border-radius: 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 8px; padding: 6px 12px;
+    background: var(--primary-light); color: var(--primary);
+    border-radius: 6px; font-size: 0.8rem; font-weight: 600;
     align-self: flex-start;
   }
 
-  .doc-links {
-    display: flex; flex-wrap: wrap; gap: 10px;
+  /* 정적 도면 카드 — 썸네일 영역 */
+  .figure-card { padding: 0; }
+  .figure-card .thumb {
+    display: block; aspect-ratio: 16 / 9;
+    background: #f3f4f8; overflow: hidden;
+    border-bottom: 1px solid var(--border);
   }
+  .figure-card .thumb img {
+    width: 100%; height: 100%; object-fit: contain;
+    transition: transform 0.18s;
+  }
+  .figure-card:hover .thumb img { transform: scale(1.02); }
+  .figure-card h4,
+  .figure-card .meta-line,
+  .figure-card .desc { padding-left: 18px; padding-right: 18px; }
+  .figure-card h4 { padding-top: 14px; }
+  .figure-card .download { margin-left: 18px; margin-bottom: 18px; }
+
+  .doc-links { display: flex; flex-wrap: wrap; gap: 10px; }
   .doc-links a {
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--surface);
     border: 1px solid var(--border);
     padding: 10px 16px;
     border-radius: 10px;
-    font-size: 0.92rem;
-    font-weight: 500;
+    font-size: 0.92rem; font-weight: 500;
     color: var(--text);
     transition: border-color 0.15s, background 0.15s;
   }
-  .doc-links a:hover {
-    border-color: var(--primary);
-    background: var(--primary-light);
-    text-decoration: none;
-  }
+  .doc-links a:hover { border-color: var(--primary); background: var(--primary-light); text-decoration: none; }
 
   footer {
     background: #0f172a;
@@ -247,7 +204,7 @@
     <p class="subtitle">GIS 기반 통학환경 종합 분석 플랫폼</p>
     <p class="meta">
       📅 데이터 기준일: 2026. 3. 31.<br>
-      🔬 현재 진행: 외부환경 분석 (도시개발) — 다른 분석 영역 추가 예정<br>
+      🔬 현재 진행: 외부환경 분석 (도시개발 + 경사도) — 다른 분석 영역 추가 예정<br>
       👥 연구진: 국립공주대학교 지리학과 장동호 · 박종철 · 임창민
     </p>
   </div>
@@ -257,7 +214,7 @@
   <div class="container">
 
     <div class="stat-grid">
-      <div class="stat"><div class="label">분석 대상</div><div class="value">245<span class="unit">교</span></div></div>
+      <div class="stat"><div class="label">분석 대상</div><div class="value">243<span class="unit">교</span></div></div>
       <div class="stat"><div class="label">도시정비사업</div><div class="value">120<span class="unit">건</span></div></div>
       <div class="stat"><div class="label">트램 공구</div><div class="value">14<span class="unit">개</span></div></div>
       <div class="stat"><div class="label">트램 정거장</div><div class="value">45<span class="unit">개</span></div></div>
@@ -269,32 +226,142 @@
       <a href="outputs/maps/대전_외부환경분석_도시개발.html">
         <div class="icon">🗺️</div>
         <h3>대전 외부환경분석 종합 맵</h3>
-        <p>학교 245교 · 정비사업 120건 영향권(1km/1.5km) · 트램 14개 공구 · 45개 정거장 · 우선순위 점수 · 적격성 분석 — 단일 인터랙티브 맵에서 모두 확인</p>
+        <p>학교 243교 · 정비사업 120건 영향권(1km/1.5km) · 경사도 음영 · 우선순위 점수 · 적격성 분석 — 단일 인터랙티브 맵에서 모두 확인</p>
         <span class="cta">맵 열기 →</span>
       </a>
     </div>
 
-    <h2><span class="num">📊</span> 분석표 다운로드 <span class="count" id="csv-count"></span></h2>
-    <div class="card-grid" id="csv-cards">
-      <!-- JS로 동적 생성 -->
+    <h2 style="margin-top: 40px;"><span class="num">🖼️</span> 정적 도면 <span class="count">(총 2개)</span></h2>
+    <div class="card-grid">
+      <div class="card figure-card">
+        <a class="thumb" href="outputs/figures/dem_clip_preview.png" target="_blank" rel="noopener">
+          <img src="outputs/figures/dem_clip_preview.png" alt="dem_clip_preview" loading="lazy">
+        </a>
+        <h4>dem_clip_preview</h4>
+        <div class="meta-line">653.0 KB · 클릭 시 원본</div>
+        <p class="desc">대전 경계 5m DEM/Slope 클립 결과 미리보기 (참고용)</p>
+        <a class="download" href="outputs/figures/dem_clip_preview.png" download>📥 PNG 다운로드</a>
+      </div>
+      <div class="card figure-card">
+        <a class="thumb" href="outputs/figures/slope_hypothesis.png" target="_blank" rel="noopener">
+          <img src="outputs/figures/slope_hypothesis.png" alt="slope_hypothesis" loading="lazy">
+        </a>
+        <h4>slope_hypothesis</h4>
+        <div class="meta-line">176.0 KB · 클릭 시 원본</div>
+        <p class="desc">현행 통학차량 운영 학교의 경사도 분포 — 점수 산식의 사후 검증 (Phase B-1)</p>
+        <a class="download" href="outputs/figures/slope_hypothesis.png" download>📥 PNG 다운로드</a>
+      </div>
     </div>
 
-    <h2 style="margin-top: 40px;"><span class="num">📈</span> 정적 도면</h2>
+    <h2 style="margin-top: 40px;"><span class="num">📊</span> 분석표 다운로드 <span class="count">(총 14개)</span></h2>
     <div class="card-grid">
       <div class="card">
-        <div class="icon">📈</div>
-        <h4>우선순위 히트맵</h4>
-        <p class="desc">통학지원 우선순위 학교 분포 히트맵 (300dpi, 보고서 삽입용)</p>
-        <a class="download" href="outputs/figures/우선순위_히트맵.png" download>📥 PNG 다운로드</a>
+        <div class="icon">📊</div>
+        <h4>도시개발영향_상위30교</h4>
+        <div class="meta-line">30행 · 10.6 KB</div>
+        <p class="desc">재개발·재건축 1km 영향권 가중 점수 상위 30교</p>
+        <a class="download" href="outputs/tables/도시개발영향_상위30교.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>신규검토대상_상위30교</h4>
+        <div class="meta-line">30행 · 8.7 KB</div>
+        <p class="desc">현행 14교 제외, 미운영 학교 중 적격성 상위 30교</p>
+        <a class="download" href="outputs/tables/신규검토대상_상위30교.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>재개발영향권_요약</h4>
+        <div class="meta-line">110행 · 10.2 KB</div>
+        <p class="desc">정비사업별 1km/1.5km 영향권 내 학교 집계</p>
+        <a class="download" href="outputs/tables/재개발영향권_요약.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>재개발영향권_요약_임박도별</h4>
+        <div class="meta-line">7행 · 0.5 KB</div>
+        <p class="desc">사업 추진단계(임박도)별 영향 학교 집계</p>
+        <a class="download" href="outputs/tables/재개발영향권_요약_임박도별.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>통학버스운용_미래시나리오</h4>
+        <div class="meta-line">243행 · 42.8 KB</div>
+        <p class="desc">단기·중기·장기 시나리오별 통학버스 수요</p>
+        <a class="download" href="outputs/tables/통학버스운용_미래시나리오.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>통학버스운용_미래시나리오_상위30교</h4>
+        <div class="meta-line">30행 · 4.9 KB</div>
+        <p class="desc">미래 시나리오 운용 우선 학교 30교</p>
+        <a class="download" href="outputs/tables/통학버스운용_미래시나리오_상위30교.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>통학지원_우선순위_상위30교</h4>
+        <div class="meta-line">30행 · 16.8 KB</div>
+        <p class="desc">통합 우선순위 상위 30교 추출</p>
+        <a class="download" href="outputs/tables/통학지원_우선순위_상위30교.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>통학지원_우선순위_학교별</h4>
+        <div class="meta-line">243행 · 88.7 KB</div>
+        <p class="desc">243교 통학지원 우선순위 종합 점수 (적격성 0.70 + 도시개발영향 0.30)</p>
+        <a class="download" href="outputs/tables/통학지원_우선순위_학교별.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>통학지원적격성_상위30교</h4>
+        <div class="meta-line">30행 · 4.2 KB</div>
+        <p class="desc">적격성 점수 상위 30교</p>
+        <a class="download" href="outputs/tables/통학지원적격성_상위30교.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>통학지원적격성_상위30교_v2</h4>
+        <div class="meta-line">30행 · 9.1 KB</div>
+        <p class="desc">적격성 산정 v2 (가중치 조정안, 검토용)</p>
+        <a class="download" href="outputs/tables/통학지원적격성_상위30교_v2.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>통학지원적격성_학교별</h4>
+        <div class="meta-line">243행 · 73.2 KB</div>
+        <p class="desc">동급학교밀도 0.50 + 도심거리 0.30 + 학교규모 0.20 가중합</p>
+        <a class="download" href="outputs/tables/통학지원적격성_학교별.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>트램_공사영향권_상세</h4>
+        <div class="meta-line">95행 · 13.9 KB</div>
+        <p class="desc">트램 14개 공구 공사 영향 학교 상세</p>
+        <a class="download" href="outputs/tables/트램_공사영향권_상세.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>트램_공사영향권_요약</h4>
+        <div class="meta-line">14행 · 1.2 KB</div>
+        <p class="desc">공구별 영향 학교 수 요약</p>
+        <a class="download" href="outputs/tables/트램_공사영향권_요약.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>트램_정거장_접근성</h4>
+        <div class="meta-line">243행 · 14.5 KB</div>
+        <p class="desc">45개 정거장-학교 도보 접근성</p>
+        <a class="download" href="outputs/tables/트램_정거장_접근성.csv" download>📥 CSV 다운로드</a>
       </div>
     </div>
 
     <h2 style="margin-top: 40px;"><span class="num">📄</span> 문서</h2>
     <div class="doc-links">
-      <a href="https://github.com/changminim/daejeon-school-research#readme">📖 README (GitHub)</a>
-      <a href="https://github.com/changminim/daejeon-school-research/blob/main/docs/data_sources.md">📋 데이터 출처</a>
-      <a href="https://github.com/changminim/daejeon-school-research">💻 소스 코드</a>
-      <a href="https://github.com/changminim/daejeon-school-research/blob/main/LICENSE">⚖️ 라이선스 (MIT)</a>
+      <a href="https://github.com/ChangminIm/daejeon-school-research#readme">📖 README (GitHub)</a>
+      <a href="https://github.com/ChangminIm/daejeon-school-research/blob/main/docs/data_sources.md">📋 데이터 출처</a>
+      <a href="https://github.com/ChangminIm/daejeon-school-research/blob/main/docs/경사도_분석_결과.md">🏔️ 경사도 분석 결과</a>
+      <a href="https://github.com/ChangminIm/daejeon-school-research">💻 소스 코드</a>
+      <a href="https://github.com/ChangminIm/daejeon-school-research/blob/main/LICENSE">⚖️ 라이선스 (MIT)</a>
     </div>
 
   </div>
@@ -303,48 +370,14 @@
 <footer>
   <div class="container">
     <h5>대전광역시교육청 통학지원 운영방안 연구</h5>
-    <p>국립공주대학교 정책연구용역 · 외부환경분석 (도시개발) 파트</p>
+    <p>국립공주대학교 정책연구용역 · 외부환경분석 (도시개발 + 경사도) 파트</p>
     <p>© 2026 임창민 (Changmin Im) · 국립공주대학교 지리학과</p>
     <p style="margin-top: 12px;">
-      <a href="https://github.com/changminim/daejeon-school-research">GitHub Repository</a>
+      <a href="https://github.com/ChangminIm/daejeon-school-research">GitHub Repository</a>
       &nbsp;·&nbsp; 코드 라이선스: MIT
     </p>
   </div>
 </footer>
-
-<script>
-  // CSV 카드 동적 생성
-  const csvFiles = [
-    { file: "통학지원_우선순위_학교별.csv", title: "통학지원 우선순위 — 학교별", desc: "245교 통학지원 우선순위 종합 점수" },
-    { file: "통학지원_우선순위_상위30교.csv", title: "통학지원 우선순위 — 상위 30교", desc: "우선순위 점수 상위 30교 추출" },
-    { file: "통학지원적격성_학교별.csv", title: "통학지원 적격성 — 학교별", desc: "거리·안전·환경 요인 종합 적격성 점수" },
-    { file: "통학지원적격성_상위30교.csv", title: "통학지원 적격성 — 상위 30교", desc: "적격성 점수 상위 30교" },
-    { file: "통학지원적격성_상위30교_v2.csv", title: "통학지원 적격성 상위 30교 (v2)", desc: "적격성 산정 v2 (가중치 조정안)" },
-    { file: "신규검토대상_상위30교.csv", title: "신규 통학지원 검토 대상", desc: "현행 미운용 학교 중 신규 검토 후보 30교" },
-    { file: "도시개발영향_상위30교.csv", title: "도시개발 영향 — 상위 30교", desc: "재개발·재건축으로 통학환경 영향 큰 학교" },
-    { file: "재개발영향권_요약.csv", title: "재개발 영향권 — 요약", desc: "정비사업별 영향권 내 학교 수 집계" },
-    { file: "재개발영향권_요약_임박도별.csv", title: "재개발 영향권 — 임박도별", desc: "사업 추진단계별 학교 수 집계" },
-    { file: "트램_공사영향권_상세.csv", title: "트램 공사영향권 — 상세", desc: "트램 14개 공구 공사기간 영향 학교 상세" },
-    { file: "트램_공사영향권_요약.csv", title: "트램 공사영향권 — 요약", desc: "공구별 영향 학교 수 요약" },
-    { file: "트램_정거장_접근성.csv", title: "트램 정거장 접근성", desc: "45개 정거장-학교 도보 접근성 분석" },
-    { file: "통학버스운용_미래시나리오.csv", title: "통학버스 운용 — 미래 시나리오", desc: "단기·중기·장기 시나리오별 통학버스 수요" },
-    { file: "통학버스운용_미래시나리오_상위30교.csv", title: "통학버스 운용 — 상위 30교", desc: "미래 시나리오 운용 우선 학교 30개" },
-  ];
-
-  const grid = document.getElementById("csv-cards");
-  csvFiles.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="icon">📊</div>
-      <h4>${item.title}</h4>
-      <p class="desc">${item.desc}</p>
-      <a class="download" href="outputs/tables/${item.file}" download>📥 CSV 다운로드</a>
-    `;
-    grid.appendChild(card);
-  });
-  document.getElementById("csv-count").textContent = `(총 ${csvFiles.length}개)`;
-</script>
 
 </body>
 </html>

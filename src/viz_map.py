@@ -571,7 +571,7 @@ def _common_priority_popup(r, score_col, rank_col, label, color):
 
 
 def add_eligibility_top30(m, csv_path=None, schools_df=None):
-    """★ 신규 검토 대상 30교 (현행 14교 제외, 적격성 상위, 기본 ON).
+    """★ 신규 검토 대상 30교 (현행 14교 제외, 적격성 상위, 기본 OFF).
     통일 팝업(build_school_popup) 사용."""
     from src.config import OUTPUT_TABLES
     from src.popup_builder import build_school_popup, build_popup_context
@@ -584,7 +584,7 @@ def add_eligibility_top30(m, csv_path=None, schools_df=None):
         schools_df = pd.read_csv(DATA_PROCESSED / "schools_with_impact.csv")
     ctx = build_popup_context(schools_df)
     fg = folium.FeatureGroup(
-        name=f"★ 신규 검토 대상 30교 (적격성 상위·미운영) ({len(df)}교)", show=True
+        name=f"★ 신규 검토 대상 30교 (적격성 상위·미운영) ({len(df)}교)", show=False
     )
     for _, r in df.iterrows():
         rank = int(r["미운영순위"])
@@ -1038,6 +1038,7 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
     # (folium은 add_to만 하면 visible 시작이라 OFF FG는 명시적으로 끔)
     off_layers = []
     if fg_dong: off_layers.append(n(fg_dong))
+    if fg_elig: off_layers.append(n(fg_elig))
     if fg_integ: off_layers.append(n(fg_integ))
     if fg_dev: off_layers.append(n(fg_dev))
     for fg in [fg_gongsa, fg_gwanli, fg_siheng, fg_johap, fg_ipan]:
@@ -1079,7 +1080,7 @@ def _add_custom_panel(m, base_tiles, admin_fgs, school_fgs,
   <div class="lp-group">
     <div class="lp-header" onclick="lpToggle(this)">🎯 통학지원 분석 <span class="arrow">▼</span></div>
     <div class="lp-body">
-      <label><input type="checkbox" checked onchange="lpLayer(this,'{n(fg_elig)}')"> ★ 적격성 상위 30교</label>
+      <label><input type="checkbox" onchange="lpLayer(this,'{n(fg_elig)}')"> ★ 적격성 상위 30교</label>
       <label><input type="checkbox" checked onchange="lpLayer(this,'{n(fg_bus14)}')"> 🚌 현행 통학차량 ({n_bus14}교)</label>
       <label><input type="checkbox" onchange="lpLayer(this,'{n(fg_integ)}')"> ⬢ 미래 시나리오 적격성 상위 30교</label>
     </div>
