@@ -114,6 +114,20 @@ KDE_HEATMAP_RADIUS = 30      # HeatMap 픽셀 반경 (대역폭 2500m 근사)
 KDE_HEATMAP_BLUR = 25        # 블러 강도
 KDE_HEATMAP_MIN_OPACITY = 0.3
 
+# ===== 통학차량 운영 분류 (2026.3.31 기준, 14교 명단) =====
+# - OPERATING_12: 실제 운영 중 + 이용 학생 있음 (회귀의 y=1 대상)
+# - PLANNED_1   : 흥도초 (2026 상반기 미계약, 하반기 임시배치 셔틀 운영 예정)
+# - NOMINAL_1   : 신탄진용정초 (이용 학생 0명, 명목 등록만)
+# 매핑 키는 약식 학교명 (data/external/bus/대전_현행통학차량_14개교.csv 학교명 컬럼과 동일)
+BUS_OPERATING_12_SHORT = [
+    "진잠초", "구즉초", "남선초", "기성초 및 길헌분교",
+    "대전원신흥초 복용분교장", "계산초", "장동초", "동명초",
+    "산내초", "산서초", "산흥초", "세천초",
+]
+BUS_PLANNED_1_SHORT = ["흥도초"]
+BUS_NOMINAL_1_SHORT = ["신탄진용정초"]
+BUS_ALL_14_SHORT = BUS_OPERATING_12_SHORT + BUS_PLANNED_1_SHORT + BUS_NOMINAL_1_SHORT
+
 # ===== API 키 =====
 VWORLD_API_KEY = os.environ.get("VWORLD_API_KEY")
 VWORLD_GEOCODE_URL = "https://api.vworld.kr/req/address"
