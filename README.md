@@ -89,7 +89,6 @@ python run.py
 daejeon-school-research/
 ├── README.md                  # 이 파일
 ├── LICENSE                    # MIT
-├── CLAUDE.md                  # Claude Code 프로젝트 컨텍스트
 ├── requirements.txt           # 파이썬 의존성
 ├── .env.example               # 환경변수 템플릿 (본인 키로 .env 작성)
 ├── run.py                     # 메인 파이프라인 실행 스크립트

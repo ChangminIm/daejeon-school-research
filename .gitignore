@@ -26,10 +26,11 @@ Thumbs.db
 *.key
 *.pem
 
-# Claude Code 로컬 설정
+# 로컬 컨텍스트 / IDE 설정 (개인용, 비공개)
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 .claude/
+CLAUDE.md
 
 # 캐시 (재현 가능)
 cache/

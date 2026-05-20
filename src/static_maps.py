@@ -57,11 +57,11 @@ FOOTER = "데이터 기준일: 2026.3.31 · 국립공주대학교 지리학과 (
 
 # 자치구 라벨 위치 — 사용자 명시 (학교 분포 피한 위치, 4326)
 GU_LABEL_POS_4326 = {
-    "유성구": (127.3450, 36.3850),
-    "대덕구": (127.4250, 36.4150),
-    "동구":   (127.4650, 36.3050),
-    "중구":   (127.4280, 36.3180),
-    "서구":   (127.3700, 36.3450),
+    "유성구": (127.3450, 36.3950),  # 북서쪽
+    "대덕구": (127.4300, 36.4200),  # 북동쪽
+    "동구":   (127.4700, 36.3050),  # 동쪽
+    "중구":   (127.4400, 36.2950),  # 중남쪽
+    "서구":   (127.3650, 36.3450),  # 서쪽
 }
 
 # 운영 분류 색상
@@ -411,7 +411,7 @@ def figure_03_top30(sigungu, schools, top30):
 
     _draw_sigungu(ax, sigungu)
 
-    # 상위 학교 범례 — 우상단 (지도 안)
+    # 상위 학교 범례 — 우상단 (지도 안, 안쪽으로 + zorder 최상위)
     legend_elems = [
         Line2D([], [], marker="*", color="w", markerfacecolor="#C0392B",
                markersize=17, label="상위 1~5교"),
@@ -422,18 +422,22 @@ def figure_03_top30(sigungu, schools, top30):
         Line2D([], [], marker="o", color="w", markerfacecolor="#bbb",
                markersize=6, label="기타 학교"),
     ]
-    ax.legend(handles=legend_elems, **LEGEND_UPPER_RIGHT,
-              fontsize=10, handletextpad=1.0, borderpad=0.8)
+    leg = ax.legend(handles=legend_elems,
+                    loc="upper right", bbox_to_anchor=(0.96, 0.96),
+                    framealpha=0.95, facecolor="white", edgecolor="gray",
+                    fontsize=10, handletextpad=1.0, borderpad=0.8)
+    leg.set_zorder(10000)
 
-    # 정의 박스 — 우하단 (범례와 분리)
+    # 정의 박스 — 우하단 (안쪽으로 + zorder 최상위)
     def_text = (
         "신규 검토 대상\n"
         "= 적격성 점수 상위 + 현행 미운영"
     )
-    ax.text(0.98, 0.02, def_text, transform=ax.transAxes,
+    ax.text(0.96, 0.04, def_text, transform=ax.transAxes,
             fontsize=10.5, ha="right", va="bottom",
             bbox=dict(boxstyle="round,pad=0.5", fc="white", ec="gray",
-                      alpha=0.95, linewidth=0.8))
+                      alpha=0.95, linewidth=0.8),
+            zorder=10000)
 
     return _save(fig, "03_적격성상위30교.png")
 

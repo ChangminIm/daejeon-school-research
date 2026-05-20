@@ -142,7 +142,7 @@ def figure_07_route_slope_profile(sigungu, routes_3857, routes_slope_df, schools
 
     _draw_sigungu(ax, sigungu)
 
-    # 노선 경사 5단계 범례 — 우하단 (지도 안)
+    # 노선 경사 5단계 범례 — 우하단 (안쪽으로 미세 조정)
     legend_elems = [
         Patch(facecolor="#2D8B43", label="< 3°  (평지)"),
         Patch(facecolor="#91C266", label="3 ~ 6°"),
@@ -150,7 +150,9 @@ def figure_07_route_slope_profile(sigungu, routes_3857, routes_slope_df, schools
         Patch(facecolor="#B85C2A", label="9 ~ 12°"),
         Patch(facecolor="#8B1A1A", label="≥ 12°  (가파름)"),
     ]
-    ax.legend(handles=legend_elems, **LEGEND_LOWER_RIGHT,
+    ax.legend(handles=legend_elems,
+              loc="lower right", bbox_to_anchor=(0.96, 0.04),
+              framealpha=0.92, facecolor="white", edgecolor="gray",
               title="노선 평균 경사", title_fontsize=9.5, fontsize=9.5)
 
     return _save(fig, "07_노선경사프로파일.png")
@@ -336,17 +338,19 @@ def figure_09_route_overlap(sigungu, routes_3857, schools_3857):
 
 
 def figure_09_zoom(region_label, schools_in_region, sigungu, routes_3857,
-                    routes_slope_df, stops_3857, schools_3857, out_name):
-    """공동활용 후보 권역 R1·R2 확대 지도.
+                    routes_slope_df, stops_3857, schools_3857, out_name,
+                    overlap_pct=None):
+    """공동활용 후보 권역 확대 지도.
 
-    region_label: "R1: 남선초·진잠초" 같은 제목 후반부
+    region_label: "남선초·진잠초" 같은 학교 페어
     schools_in_region: list of short school names (e.g. ['남선초', '진잠초'])
+    overlap_pct: 중첩률 (%) — 우하단 정보 박스에 표기
     """
     import json as _json
     from src.config import DATA_GEOJSON
     from shapely.ops import unary_union
 
-    fig, ax = _setup(f"공동활용 후보 권역 {region_label}")
+    fig, ax = _setup(f"공동활용 후보 권역: {region_label}")
 
     # 권역 학교들의 노선 union → bounding box + 1km 여유
     region_routes = routes_3857[routes_3857["short"].isin(schools_in_region)]
@@ -416,7 +420,7 @@ def figure_09_zoom(region_label, schools_in_region, sigungu, routes_3857,
 
     ax.set_axis_off()
 
-    # 범례 + 중첩률 박스 (우하단)
+    # 범례 — 좌하단 (정보 박스 자리 확보)
     legend_elems = [
         Line2D([], [], color=palette[schools_in_region[0]], linewidth=2.5,
                label=f"{schools_in_region[0]} 노선"),
@@ -429,7 +433,23 @@ def figure_09_zoom(region_label, schools_in_region, sigungu, routes_3857,
         Line2D([], [], marker="o", color="w", markerfacecolor="white",
                markersize=8, markeredgecolor="#1A237E", label="정류장"),
     ]
-    ax.legend(handles=legend_elems, **LEGEND_LOWER_RIGHT, fontsize=9.5)
+    ax.legend(handles=legend_elems,
+              loc="lower left", bbox_to_anchor=(0.02, 0.02),
+              framealpha=0.92, facecolor="white", edgecolor="gray",
+              fontsize=9.5)
+
+    # 권역 정보 박스 — 우하단
+    total_length_km = region_routes.geometry.length.sum() / 1000
+    if overlap_pct is not None:
+        info_text = f"중첩률: {overlap_pct:.0f}%\n노선 합산: {total_length_km:.1f} km"
+    else:
+        info_text = f"노선 합산: {total_length_km:.1f} km"
+    ax.text(0.98, 0.02, info_text, transform=ax.transAxes,
+            ha="right", va="bottom", fontsize=10.5, fontweight="bold",
+            color="#222",
+            bbox=dict(boxstyle="round,pad=0.5", fc="white", ec="gray",
+                      alpha=0.95, linewidth=0.8),
+            zorder=15)
 
     return _save(fig, out_name)
 
@@ -439,7 +459,7 @@ def figure_09_zoom(region_label, schools_in_region, sigungu, routes_3857,
 
 def main():
     print("=" * 72)
-    print("Phase 2 정적 도면 (07·08·09 + 09a·09b R1·R2 확대)")
+    print("Phase 2 정적 도면 (07·08·09 + 09-1·09-2 공동활용권역 확대)")
     print("=" * 72)
 
     from src.route_slope import (
@@ -475,17 +495,28 @@ def main():
     print("\n[5] 도면 09 — 노선 중복 / 공동활용 후보 권역")
     figure_09_route_overlap(sigungu, routes_3857, schools_3857)
 
-    print("\n[6] 도면 09a·09b — R1·R2 권역 확대")
+    print("\n[6] 도면 09-1·09-2 — 공동활용권역 확대")
     # 정류장도 3857로 로드
     from src.route_slope import load_stops
     stops_5179 = load_stops()
     stops_3857 = stops_5179.to_crs(CRS_3857)
-    figure_09_zoom("R1: 남선초·진잠초", ["남선초", "진잠초"],
+    figure_09_zoom("남선초·진잠초", ["남선초", "진잠초"],
                     sigungu, routes_3857, routes_slope_df,
-                    stops_3857, schools_3857, "09a_R1_확대.png")
-    figure_09_zoom("R2: 산내초·산흥초", ["산내초", "산흥초"],
+                    stops_3857, schools_3857,
+                    "09-1_공동활용권역_남선진잠.png",
+                    overlap_pct=31)
+    figure_09_zoom("산내초·산흥초", ["산내초", "산흥초"],
                     sigungu, routes_3857, routes_slope_df,
-                    stops_3857, schools_3857, "09b_R2_확대.png")
+                    stops_3857, schools_3857,
+                    "09-2_공동활용권역_산내산흥.png",
+                    overlap_pct=48)
+
+    # 구파일 삭제 (이름 변경됨)
+    for old in ["09a_R1_확대.png", "09b_R2_확대.png"]:
+        oldp = OUTPUT_FIGURES / old
+        if oldp.exists():
+            oldp.unlink()
+            print(f"  - 구파일 삭제: {old}")
 
     print("\n" + "=" * 72)
     print("[DONE] 도면 3장 생성")

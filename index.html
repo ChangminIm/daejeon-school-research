@@ -164,18 +164,18 @@
   .figure-card h4 { padding-top: 14px; }
   .figure-card .download { margin-left: 18px; margin-bottom: 18px; }
 
-  .doc-links { display: flex; flex-wrap: wrap; gap: 10px; }
-  .doc-links a {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-size: 0.92rem; font-weight: 500;
+  .table-category { margin-top: 14px; }
+  .table-category:first-child { margin-top: 0; }
+  .table-category h3 {
+    margin: 0 0 10px;
+    font-size: 1.05rem; font-weight: 700;
     color: var(--text);
-    transition: border-color 0.15s, background 0.15s;
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 0 6px 12px;
+    border-left: 4px solid var(--primary);
   }
-  .doc-links a:hover { border-color: var(--primary); background: var(--primary-light); text-decoration: none; }
+  .table-category h3 .num { color: var(--primary); font-feature-settings: "tnum"; }
+  .table-category h3 .count { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
 
   footer {
     background: #0f172a;
@@ -239,7 +239,7 @@
           <img src="outputs/figures/01_종합지도.png" alt="01. 종합지도" loading="lazy">
         </a>
         <h4>01. 종합지도</h4>
-        <div class="meta-line">2629.2 KB · 클릭 시 원본</div>
+        <div class="meta-line">2639.5 KB · 클릭 시 원본</div>
         <p class="desc">학교 243교 · 재개발 110건 · 적격성 상위 30교 · 운영 12교 + 예정·명목 각 1</p>
         <a class="download" href="outputs/figures/01_종합지도.png" download>📥 PNG 다운로드</a>
       </div>
@@ -248,7 +248,7 @@
           <img src="outputs/figures/02_재개발임박도.png" alt="02. 재개발임박도" loading="lazy">
         </a>
         <h4>02. 재개발임박도</h4>
-        <div class="meta-line">2295.0 KB · 클릭 시 원본</div>
+        <div class="meta-line">2301.4 KB · 클릭 시 원본</div>
         <p class="desc">재개발 사업 단계별 점 + KDE 도시개발 압력 (세대수 가중) — 대전 영역 마스킹</p>
         <a class="download" href="outputs/figures/02_재개발임박도.png" download>📥 PNG 다운로드</a>
       </div>
@@ -257,7 +257,7 @@
           <img src="outputs/figures/03_적격성상위30교.png" alt="03. 적격성상위30교" loading="lazy">
         </a>
         <h4>03. 적격성상위30교</h4>
-        <div class="meta-line">2549.3 KB · 클릭 시 원본</div>
+        <div class="meta-line">2540.5 KB · 클릭 시 원본</div>
         <p class="desc">신규 검토 대상 30교 — 등급별(1~5/6~15/16~30) + 상위 5교 자동배치 라벨</p>
         <a class="download" href="outputs/figures/03_적격성상위30교.png" download>📥 PNG 다운로드</a>
       </div>
@@ -266,7 +266,7 @@
           <img src="outputs/figures/05_경사도음영_운영학교.png" alt="05. 경사도음영 운영학교" loading="lazy">
         </a>
         <h4>05. 경사도음영 운영학교</h4>
-        <div class="meta-line">3669.5 KB · 클릭 시 원본</div>
+        <div class="meta-line">3670.2 KB · 클릭 시 원본</div>
         <p class="desc">5m DEM 경사도 음영 + 운영 12교 분포 (평균 8°) — 산악권 집중 (p&lt;0.0001)</p>
         <a class="download" href="outputs/figures/05_경사도음영_운영학교.png" download>📥 PNG 다운로드</a>
       </div>
@@ -275,7 +275,7 @@
           <img src="outputs/figures/06_KDE학생분포.png" alt="06. KDE학생분포" loading="lazy">
         </a>
         <h4>06. KDE학생분포</h4>
-        <div class="meta-line">2511.4 KB · 클릭 시 원본</div>
+        <div class="meta-line">2519.8 KB · 클릭 시 원본</div>
         <p class="desc">학생수 가중 KDE — 행정구역 마스킹, 도심 밀집 vs 신규 검토 외곽 분산</p>
         <a class="download" href="outputs/figures/06_KDE학생분포.png" download>📥 PNG 다운로드</a>
       </div>
@@ -284,7 +284,7 @@
           <img src="outputs/figures/07_노선경사프로파일.png" alt="07. 노선경사프로파일" loading="lazy">
         </a>
         <h4>07. 노선경사프로파일</h4>
-        <div class="meta-line">3303.1 KB · 클릭 시 원본</div>
+        <div class="meta-line">3297.0 KB · 클릭 시 원본</div>
         <p class="desc">통학차량 183개 노선 + 평균 경사 5단계 색상(인터랙티브와 일관) + 운영 학교 마커</p>
         <a class="download" href="outputs/figures/07_노선경사프로파일.png" download>📥 PNG 다운로드</a>
       </div>
@@ -298,45 +298,113 @@
         <a class="download" href="outputs/figures/08_노선vs학교위치_경사비교.png" download>📥 PNG 다운로드</a>
       </div>
       <div class="card figure-card">
+        <a class="thumb" href="outputs/figures/09-1_공동활용권역_남선진잠.png" target="_blank" rel="noopener">
+          <img src="outputs/figures/09-1_공동활용권역_남선진잠.png" alt="09-1. 공동활용권역 남선진잠" loading="lazy">
+        </a>
+        <h4>09-1. 공동활용권역 남선진잠</h4>
+        <div class="meta-line">1965.0 KB · 클릭 시 원본</div>
+        <p class="desc">공동활용 후보 권역 확대 — 남선초·진잠초 노선·정류장·중첩 영역 (중첩률 31%)</p>
+        <a class="download" href="outputs/figures/09-1_공동활용권역_남선진잠.png" download>📥 PNG 다운로드</a>
+      </div>
+      <div class="card figure-card">
+        <a class="thumb" href="outputs/figures/09-2_공동활용권역_산내산흥.png" target="_blank" rel="noopener">
+          <img src="outputs/figures/09-2_공동활용권역_산내산흥.png" alt="09-2. 공동활용권역 산내산흥" loading="lazy">
+        </a>
+        <h4>09-2. 공동활용권역 산내산흥</h4>
+        <div class="meta-line">831.7 KB · 클릭 시 원본</div>
+        <p class="desc">공동활용 후보 권역 확대 — 산내초·산흥초 노선·정류장·중첩 영역 (중첩률 48%)</p>
+        <a class="download" href="outputs/figures/09-2_공동활용권역_산내산흥.png" download>📥 PNG 다운로드</a>
+      </div>
+      <div class="card figure-card">
         <a class="thumb" href="outputs/figures/09_노선중복_공동활용권역.png" target="_blank" rel="noopener">
           <img src="outputs/figures/09_노선중복_공동활용권역.png" alt="09. 노선중복 공동활용권역" loading="lazy">
         </a>
         <h4>09. 노선중복 공동활용권역</h4>
-        <div class="meta-line">2206.6 KB · 클릭 시 원본</div>
-        <p class="desc">노선 100m 버퍼 중첩 영역 + 공동활용 후보 권역 (R1 남선·진잠, R2 산내·산흥)</p>
+        <div class="meta-line">2213.9 KB · 클릭 시 원본</div>
+        <p class="desc">노선 100m 버퍼 중첩 영역 + 공동활용 후보 권역 (남선·진잠, 산내·산흥)</p>
         <a class="download" href="outputs/figures/09_노선중복_공동활용권역.png" download>📥 PNG 다운로드</a>
       </div>
       <div class="card figure-card">
-        <a class="thumb" href="outputs/figures/09a_R1_확대.png" target="_blank" rel="noopener">
-          <img src="outputs/figures/09a_R1_확대.png" alt="09a_R1_확대" loading="lazy">
+        <a class="thumb" href="outputs/figures/10_경사도분포_그룹별.png" target="_blank" rel="noopener">
+          <img src="outputs/figures/10_경사도분포_그룹별.png" alt="10. 경사도분포 그룹별" loading="lazy">
         </a>
-        <h4>09a_R1_확대</h4>
-        <div class="meta-line">1949.6 KB · 클릭 시 원본</div>
-        <p class="desc">R1 권역 확대 — 남선초·진잠초 노선·정류장·중첩 영역 (중첩률 31%)</p>
-        <a class="download" href="outputs/figures/09a_R1_확대.png" download>📥 PNG 다운로드</a>
-      </div>
-      <div class="card figure-card">
-        <a class="thumb" href="outputs/figures/09b_R2_확대.png" target="_blank" rel="noopener">
-          <img src="outputs/figures/09b_R2_확대.png" alt="09b_R2_확대" loading="lazy">
-        </a>
-        <h4>09b_R2_확대</h4>
-        <div class="meta-line">837.2 KB · 클릭 시 원본</div>
-        <p class="desc">R2 권역 확대 — 산내초·산흥초 노선·정류장·중첩 영역 (중첩률 48%)</p>
-        <a class="download" href="outputs/figures/09b_R2_확대.png" download>📥 PNG 다운로드</a>
-      </div>
-      <div class="card figure-card">
-        <a class="thumb" href="outputs/figures/slope_hypothesis.png" target="_blank" rel="noopener">
-          <img src="outputs/figures/slope_hypothesis.png" alt="slope_hypothesis" loading="lazy">
-        </a>
-        <h4>slope_hypothesis</h4>
-        <div class="meta-line">113.5 KB · 클릭 시 원본</div>
-        <p class="desc">현행 통학차량 운영 학교의 경사도 분포 — 점수 산식의 사후 검증 (5박스)</p>
-        <a class="download" href="outputs/figures/slope_hypothesis.png" download>📥 PNG 다운로드</a>
+        <h4>10. 경사도분포 그룹별</h4>
+        <div class="meta-line">107.7 KB · 클릭 시 원본</div>
+        <p class="desc">학교 위치 경사도 그룹별 분포 — 신규 아파트·재개발·일반학교·운영 14교·대전 전역</p>
+        <a class="download" href="outputs/figures/10_경사도분포_그룹별.png" download>📥 PNG 다운로드</a>
       </div>
     </div>
 
     <h2 style="margin-top: 40px;"><span class="num">📊</span> 분석표 다운로드 <span class="count">(총 19개)</span></h2>
-    <div class="card-grid">
+    <div class="table-category">
+      <h3><span class="num">1⃣</span> 외부환경 자료 <span class="count">(6개)</span></h3>
+      <div class="card-grid">
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>도시개발영향_상위30교</h4>
+        <div class="meta-line">30행 · 10.6 KB</div>
+        <p class="desc">재개발·재건축 1km 영향권 가중 점수 상위 30교</p>
+        <a class="download" href="outputs/tables/도시개발영향_상위30교.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>재개발영향권_요약</h4>
+        <div class="meta-line">110행 · 10.2 KB</div>
+        <p class="desc">정비사업별 1km/1.5km 영향권 내 학교 집계</p>
+        <a class="download" href="outputs/tables/재개발영향권_요약.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>재개발영향권_요약_임박도별</h4>
+        <div class="meta-line">7행 · 0.5 KB</div>
+        <p class="desc">사업 추진단계(임박도)별 영향 학교 집계</p>
+        <a class="download" href="outputs/tables/재개발영향권_요약_임박도별.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>트램_공사영향권_상세</h4>
+        <div class="meta-line">95행 · 13.9 KB</div>
+        <p class="desc">트램 14개 공구 공사 영향 학교 상세</p>
+        <a class="download" href="outputs/tables/트램_공사영향권_상세.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>트램_공사영향권_요약</h4>
+        <div class="meta-line">14행 · 1.2 KB</div>
+        <p class="desc">공구별 영향 학교 수 요약</p>
+        <a class="download" href="outputs/tables/트램_공사영향권_요약.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>트램_정거장_접근성</h4>
+        <div class="meta-line">243행 · 14.5 KB</div>
+        <p class="desc">45개 정거장-학교 도보 접근성</p>
+        <a class="download" href="outputs/tables/트램_정거장_접근성.csv" download>📥 CSV 다운로드</a>
+      </div>
+      </div>
+    </div>
+    <div class="table-category">
+      <h3><span class="num">2⃣</span> 통학버스 운영 현황 <span class="count">(2개)</span></h3>
+      <div class="card-grid">
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>통학버스운용_미래시나리오</h4>
+        <div class="meta-line">243행 · 42.8 KB</div>
+        <p class="desc">단기·중기·장기 시나리오별 통학버스 수요</p>
+        <a class="download" href="outputs/tables/통학버스운용_미래시나리오.csv" download>📥 CSV 다운로드</a>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h4>통학버스운용_미래시나리오_상위30교</h4>
+        <div class="meta-line">30행 · 4.9 KB</div>
+        <p class="desc">미래 시나리오 운용 우선 학교 30교</p>
+        <a class="download" href="outputs/tables/통학버스운용_미래시나리오_상위30교.csv" download>📥 CSV 다운로드</a>
+      </div>
+      </div>
+    </div>
+    <div class="table-category">
+      <h3><span class="num">3⃣</span> 노선 중복 분석 <span class="count">(3개)</span></h3>
+      <div class="card-grid">
       <div class="card">
         <div class="icon">📊</div>
         <h4>공동활용_후보권역</h4>
@@ -358,13 +426,11 @@
         
         <a class="download" href="outputs/tables/노선중복_쌍별.csv" download>📥 CSV 다운로드</a>
       </div>
-      <div class="card">
-        <div class="icon">📊</div>
-        <h4>도시개발영향_상위30교</h4>
-        <div class="meta-line">30행 · 10.6 KB</div>
-        <p class="desc">재개발·재건축 1km 영향권 가중 점수 상위 30교</p>
-        <a class="download" href="outputs/tables/도시개발영향_상위30교.csv" download>📥 CSV 다운로드</a>
       </div>
+    </div>
+    <div class="table-category">
+      <h3><span class="num">4⃣</span> 실행 가능성 <span class="count">(1개)</span></h3>
+      <div class="card-grid">
       <div class="card">
         <div class="icon">📊</div>
         <h4>신규검토30교_정류장근접</h4>
@@ -372,13 +438,11 @@
         
         <a class="download" href="outputs/tables/신규검토30교_정류장근접.csv" download>📥 CSV 다운로드</a>
       </div>
-      <div class="card">
-        <div class="icon">📊</div>
-        <h4>신규검토대상_상위30교</h4>
-        <div class="meta-line">30행 · 8.7 KB</div>
-        <p class="desc">현행 14교 제외, 미운영 학교 중 적격성 상위 30교</p>
-        <a class="download" href="outputs/tables/신규검토대상_상위30교.csv" download>📥 CSV 다운로드</a>
       </div>
+    </div>
+    <div class="table-category">
+      <h3><span class="num">5⃣</span> 회귀·검증 <span class="count">(1개)</span></h3>
+      <div class="card-grid">
       <div class="card">
         <div class="icon">📊</div>
         <h4>운영비격차_회귀결과</h4>
@@ -386,33 +450,17 @@
         
         <a class="download" href="outputs/tables/운영비격차_회귀결과.csv" download>📥 CSV 다운로드</a>
       </div>
-      <div class="card">
-        <div class="icon">📊</div>
-        <h4>재개발영향권_요약</h4>
-        <div class="meta-line">110행 · 10.2 KB</div>
-        <p class="desc">정비사업별 1km/1.5km 영향권 내 학교 집계</p>
-        <a class="download" href="outputs/tables/재개발영향권_요약.csv" download>📥 CSV 다운로드</a>
       </div>
+    </div>
+    <div class="table-category">
+      <h3><span class="num">6⃣</span> 점수·우선순위 (최종) <span class="count">(6개)</span></h3>
+      <div class="card-grid">
       <div class="card">
         <div class="icon">📊</div>
-        <h4>재개발영향권_요약_임박도별</h4>
-        <div class="meta-line">7행 · 0.5 KB</div>
-        <p class="desc">사업 추진단계(임박도)별 영향 학교 집계</p>
-        <a class="download" href="outputs/tables/재개발영향권_요약_임박도별.csv" download>📥 CSV 다운로드</a>
-      </div>
-      <div class="card">
-        <div class="icon">📊</div>
-        <h4>통학버스운용_미래시나리오</h4>
-        <div class="meta-line">243행 · 42.8 KB</div>
-        <p class="desc">단기·중기·장기 시나리오별 통학버스 수요</p>
-        <a class="download" href="outputs/tables/통학버스운용_미래시나리오.csv" download>📥 CSV 다운로드</a>
-      </div>
-      <div class="card">
-        <div class="icon">📊</div>
-        <h4>통학버스운용_미래시나리오_상위30교</h4>
-        <div class="meta-line">30행 · 4.9 KB</div>
-        <p class="desc">미래 시나리오 운용 우선 학교 30교</p>
-        <a class="download" href="outputs/tables/통학버스운용_미래시나리오_상위30교.csv" download>📥 CSV 다운로드</a>
+        <h4>신규검토대상_상위30교</h4>
+        <div class="meta-line">30행 · 8.7 KB</div>
+        <p class="desc">현행 14교 제외, 미운영 학교 중 적격성 상위 30교</p>
+        <a class="download" href="outputs/tables/신규검토대상_상위30교.csv" download>📥 CSV 다운로드</a>
       </div>
       <div class="card">
         <div class="icon">📊</div>
@@ -449,36 +497,7 @@
         <p class="desc">동급학교밀도 0.50 + 도심거리 0.30 + 학교규모 0.20 가중합</p>
         <a class="download" href="outputs/tables/통학지원적격성_학교별.csv" download>📥 CSV 다운로드</a>
       </div>
-      <div class="card">
-        <div class="icon">📊</div>
-        <h4>트램_공사영향권_상세</h4>
-        <div class="meta-line">95행 · 13.9 KB</div>
-        <p class="desc">트램 14개 공구 공사 영향 학교 상세</p>
-        <a class="download" href="outputs/tables/트램_공사영향권_상세.csv" download>📥 CSV 다운로드</a>
       </div>
-      <div class="card">
-        <div class="icon">📊</div>
-        <h4>트램_공사영향권_요약</h4>
-        <div class="meta-line">14행 · 1.2 KB</div>
-        <p class="desc">공구별 영향 학교 수 요약</p>
-        <a class="download" href="outputs/tables/트램_공사영향권_요약.csv" download>📥 CSV 다운로드</a>
-      </div>
-      <div class="card">
-        <div class="icon">📊</div>
-        <h4>트램_정거장_접근성</h4>
-        <div class="meta-line">243행 · 14.5 KB</div>
-        <p class="desc">45개 정거장-학교 도보 접근성</p>
-        <a class="download" href="outputs/tables/트램_정거장_접근성.csv" download>📥 CSV 다운로드</a>
-      </div>
-    </div>
-
-    <h2 style="margin-top: 40px;"><span class="num">📄</span> 문서</h2>
-    <div class="doc-links">
-      <a href="https://github.com/ChangminIm/daejeon-school-research#readme">📖 README (GitHub)</a>
-      <a href="https://github.com/ChangminIm/daejeon-school-research/blob/main/docs/data_sources.md">📋 데이터 출처</a>
-      <a href="https://github.com/ChangminIm/daejeon-school-research/blob/main/docs/경사도_분석_결과.md">🏔️ 경사도 분석 결과</a>
-      <a href="https://github.com/ChangminIm/daejeon-school-research">💻 소스 코드</a>
-      <a href="https://github.com/ChangminIm/daejeon-school-research/blob/main/LICENSE">⚖️ 라이선스 (MIT)</a>
     </div>
 
   </div>

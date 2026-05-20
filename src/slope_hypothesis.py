@@ -41,7 +41,8 @@ SLOPE_TIF = DATA_EXTERNAL / "dem" / "대전_slope_5m.tif"
 SCHOOLS_SLOPE_CSV = DATA_PROCESSED / "schools_with_slope.csv"
 REDEV_SLOPE_CSV = DATA_PROCESSED / "redev_with_slope.csv"
 
-OUT_PNG = OUTPUT_FIGURES / "slope_hypothesis.png"
+OUT_PNG = OUTPUT_FIGURES / "10_경사도분포_그룹별.png"
+OLD_PNG = OUTPUT_FIGURES / "slope_hypothesis.png"  # 이름 변경 전 구파일
 
 NEW_APT_STAGES = ["1_공사중", "2_관리처분"]
 PROGRESS_STAGES = ["1_공사중", "2_관리처분", "3_사업시행", "4_조합설립", "5_초기"]
@@ -200,7 +201,7 @@ def _plot_boxplot(groups, test_results):
             patch.set_alpha(0.7)
 
     ax.set_ylabel("경사도 (°)", fontsize=12)
-    ax.set_title("통학차량 운영 학교의 경사도 분포",
+    ax.set_title("학교 위치 경사도 그룹별 분포",
                  fontsize=16, fontweight="bold", pad=12)
     ax.grid(axis="y", alpha=0.3, linestyle="--")
     ax.set_ylim(bottom=0)
@@ -218,6 +219,11 @@ def _plot_boxplot(groups, test_results):
     fig.savefig(OUT_PNG, dpi=300, bbox_inches="tight")
     plt.close(fig)
     print(f"\n[boxplot] 저장: {OUT_PNG}")
+
+    # 구파일 삭제 (이름 변경됨)
+    if OLD_PNG.exists():
+        OLD_PNG.unlink()
+        print(f"  - 구파일 삭제: {OLD_PNG.name}")
 
 
 def main():
